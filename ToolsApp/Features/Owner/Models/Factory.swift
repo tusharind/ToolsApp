@@ -1,0 +1,93 @@
+import Foundation
+
+// MARK: - Generic API Response Wrapper
+struct APIResponse<T: Decodable>: Decodable {
+    let success: Bool
+    let message: String
+    let data: T?
+    let pagination: Pagination?
+    let timestamp: String?
+}
+
+// MARK: - Pagination (Optional)
+struct Pagination: Decodable {
+    let pageNumber: Int?
+    let pageSize: Int?
+    let totalPages: Int?
+    let totalElements: Int?
+    let first: Bool?
+    let last: Bool?
+}
+
+// MARK: - Factory List Response
+struct FactoryListResponse: Decodable {
+    let content: [Factory]
+    let totalElements: Int?
+    let totalPages: Int?
+    let number: Int?
+    let size: Int?          
+    let first: Bool?
+    let last: Bool?
+    let empty: Bool?
+}
+
+// MARK: - Factory Model
+struct Factory: Identifiable, Codable {
+    var id: Int { factoryId }
+    let factoryId: Int
+    let name: String
+    let city: String
+    let address: String
+    let status: String
+    let plantHead: User?
+    let plantHeadId: Int?
+    let workers: [User]?
+    let createdAt: String?
+    let updatedAt: String?
+}
+
+// MARK: - User (Plant Head)
+struct User: Codable, Identifiable {
+    var id: Int { userId }
+    let userId: Int
+    let username: String
+    let email: String
+    let img: String?
+    let role: String
+    let phone: String
+    let password: String?
+    let status: String
+    let createdAt: String?
+    let updatedAt: String?
+    let factoryId: Int?
+    let factoryName: String?
+    let factoryRole: String?
+}
+
+// MARK: - Create Factory Request
+struct CreateFactoryRequest: Encodable {
+    let name: String
+    let city: String
+    let address: String
+    let plantHeadId: Int
+}
+
+// MARK: - Create Factory Response
+struct CreateFactoryResponse: Decodable {
+    let factoryId: Int
+    let name: String
+    let city: String
+    let address: String
+    let status: String
+    let plantHead: User?
+    let plantHeadId: Int?
+    let workers: [User]?
+    let createdAt: String?
+    let updatedAt: String?
+}
+
+struct FactoryCountResponse: Decodable {
+    let count: Int
+    let entityType: String
+}
+
