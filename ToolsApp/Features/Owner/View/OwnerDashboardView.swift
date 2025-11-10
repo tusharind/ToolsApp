@@ -51,7 +51,7 @@ struct OwnerDashboardView: View {
                                 ProgressView()
                                     .tint(metric.color)
                             } else {
-                                Text("\(viewModel.productCount)")
+                                Text("\(viewModel.productCount ?? 0)")
                                     .font(.title)
                                     .bold()
                                     .foregroundColor(.gray)
@@ -122,18 +122,34 @@ struct OwnerDashboardView: View {
                 .font(.title2)
                 .bold()
 
-            HStack(spacing: 16) {
-                QuickLinkCard(
-                    title: "Factory Products",
-                    systemImage: "shippingbox.fill",
-                    destination: ProductsListView()
-                )
-
-                QuickLinkCard(
-                    title: "Factory List",
-                    systemImage: "building.2.fill",
-                    destination: FactoriesListView()
-                )
+            VStack{
+                HStack {
+                    QuickLinkCard(
+                        title: "Factory Products",
+                        systemImage: "shippingbox.fill",
+                        destination: ProductsListView()
+                    )
+                    
+                    QuickLinkCard(
+                        title: "Factory List",
+                        systemImage: "building.2.fill",
+                        destination: FactoriesListView()
+                    )
+                }
+                HStack {
+                    
+                    QuickLinkCard(
+                        title: "My Profile",
+                        systemImage: "person",
+                        destination: AdminProfileView()
+                    )
+                    
+                    QuickLinkCard(
+                        title: "Central Office",
+                        systemImage: "globe.central.south.asia.fill",
+                        destination: OfficesListView()
+                    )
+                }
             }
         }
     }

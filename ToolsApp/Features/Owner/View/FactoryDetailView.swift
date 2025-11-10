@@ -6,12 +6,9 @@ struct FactoryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-
-                // MARK: - Factory Info
+                // Factory Info
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(factory.name)
-                        .font(.title2.bold())
-
+                    Text(factory.name).font(.title2.bold())
                     HStack {
                         Label(factory.city, systemImage: "mappin.and.ellipse")
                         Label(factory.address, systemImage: "house.fill")
@@ -19,32 +16,23 @@ struct FactoryDetailView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                    HStack {
-                        Text("Status: \(factory.status)")
-                            .font(.footnote)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(
-                                factory.status == "ACTIVE"
-                                    ? .green.opacity(0.2) : .red.opacity(0.2)
-                            )
-                            .cornerRadius(8)
-                    }
+                    Text("Status: \(factory.status)")
+                        .font(.footnote)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(factory.status == "ACTIVE" ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                        .cornerRadius(8)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(12)
 
-                // MARK: - Plant Head Info
+                // Plant Head
                 if let head = factory.plantHead {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Plant Head")
-                            .font(.headline)
-
+                        Text("Plant Head").font(.headline)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text(head.username)
-                                .font(.subheadline.bold())
+                            Text(head.username).bold()
                             Text("Email: \(head.email)")
                             Text("Phone: \(head.phone)")
                             Text("Role: \(head.role)")
@@ -53,7 +41,6 @@ struct FactoryDetailView: View {
                         .font(.footnote)
                     }
                     .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(12)
                 } else {
@@ -61,12 +48,9 @@ struct FactoryDetailView: View {
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
                 }
-
-                Spacer()
             }
             .padding()
         }
@@ -74,3 +58,4 @@ struct FactoryDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+

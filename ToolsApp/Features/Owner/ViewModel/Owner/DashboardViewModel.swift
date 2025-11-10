@@ -4,20 +4,22 @@ import SwiftUI
 @MainActor
 final class DashboardViewModel: ObservableObject {
     @Published var factoryCount: Int?
+    @Published var productCount: Int?
     @Published var managerCount: Int?
     @Published var workerCount: Int?
+    
     @Published var errorMessage: String?
     @Published var isLoading = false
-    @Published var productCount: Int?
 
     @Published var metrics: [DashboardMetric] = [
         DashboardMetric(title: "Factories", color: .blue),
-        DashboardMetric(title: "Managers", color: .green),
+        DashboardMetric(title: "Products", color: .green),
         DashboardMetric(title: "Workers", color: .orange),
     ]
 
     private let client = APIClient.shared
 
+    // MARK: - Fetch all metrics concurrently
     func fetchAllMetrics() async {
         guard !isLoading else { return }
         isLoading = true
@@ -25,87 +27,52 @@ final class DashboardViewModel: ObservableObject {
 
         async let factoryTask = fetchFactoryCount()
         async let productTask = fetchProductCount()
+    
 
-        await factoryTask
-        await productTask
+        _ = await (factoryTask, productTask)
 
         isLoading = false
     }
 
+    // MARK: - Fetch individual metrics
     func fetchFactoryCount() async {
-        print("Fetching factory count...")
-
-        let request = APIRequest(
-            path: "/owner/count",
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
-        )
-
+        let request = APIRequest(path: "/owner/count", method: .GET, parameters: nil, headers: nil, body: nil)
         do {
-            let response = try await client.send(
-                request,
-                responseType: APIResponse<FactoryCountResponse>.self
-            )
-            print("Response received: \(response)")
-
-            if let data = response.data {
-                factoryCount = data.count
-                print("Factory count updated: \(data.count)")
+            let response = try await client.send(request, responseType: APIResponse<FactoryCountResponse>.self)
+            if response.success, let data = response.data {
+                self.factoryCount = data.count
             } else {
-                errorMessage = "No factory count data found."
+                self.errorMessage = response.message
             }
         } catch {
-            errorMessage =
-                "Error fetching factory count: \(error.localizedDescription)"
-            print("Error fetching factory count: \(error.localizedDescription)")
+            self.errorMessage = "Error fetching factory count: \(error.localizedDescription)"
         }
     }
-    
-    
+
     func fetchProductCount() async {
-        print("Fetching factory count...")
-
-        let request = APIRequest(
-            path: "/owner/productCount",
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
-        )
-
+        let request = APIRequest(path: "/owner/productCount", method: .GET, parameters: nil, headers: nil, body: nil)
         do {
-            let response = try await client.send(
-                request,
-                responseType: APIResponse<ProductCountResponse>.self
-            )
-            print("Response received: \(response)")
-
-            if let data = response.data {
-                productCount = data.count
-                print("Factory count updated: \(data.count)")
+            let response = try await client.send(request, responseType: APIResponse<ProductCountResponse>.self)
+            if response.success, let data = response.data {
+                self.productCount = data.count
             } else {
-                errorMessage = "No factory count data found."
+                self.errorMessage = response.message
             }
         } catch {
-            errorMessage =
-                "Error fetching factory count: \(error.localizedDescription)"
-            print("Error fetching factory count: \(error.localizedDescription)")
+            self.errorMessage = "Error fetching product count: \(error.localizedDescription)"
         }
     }
 
-
+ 
+  
+    // MARK: - Metric value helper
     func value(for metric: DashboardMetric) -> String? {
         switch metric.title {
-        case "Factories":
-            return factoryCount.map(String.init)
-        case "Managers":
-            return managerCount.map(String.init)
-        case "Workers":
-            return workerCount.map(String.init)
-        default:
-            return nil
+        case "Factories": return factoryCount.map(String.init)
+        case "Products": return productCount.map(String.init)
+        case "Managers": return managerCount.map(String.init)
+        case "Workers": return workerCount.map(String.init)
+        default: return nil
         }
     }
 }

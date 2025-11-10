@@ -10,7 +10,7 @@ struct APIResponse<T: Decodable>: Decodable {
 }
 
 // MARK: - Pagination (Optional)
-struct Pagination: Decodable {
+struct Pagination: Codable {
     let pageNumber: Int?
     let pageSize: Int?
     let totalPages: Int?
@@ -31,8 +31,7 @@ struct FactoryListResponse: Decodable {
     let empty: Bool?
 }
 
-// MARK: - Factory Model
-struct Factory: Identifiable, Codable {
+struct Factory: Identifiable, Codable, Equatable {
     var id: Int { factoryId }
     let factoryId: Int
     let name: String
@@ -47,7 +46,7 @@ struct Factory: Identifiable, Codable {
 }
 
 // MARK: - User (Plant Head)
-struct User: Codable, Identifiable {
+struct User: Codable, Identifiable, Equatable {
     var id: Int { userId }
     let userId: Int
     let username: String

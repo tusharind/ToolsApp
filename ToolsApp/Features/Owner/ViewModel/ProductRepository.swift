@@ -18,7 +18,6 @@ final class ProductRepository {
             responseType: PaginatedProductsResponse.self
         )
     }
-
     func addProduct(_ newProduct: CreateProductRequest) async throws -> Product
     {
         let request = APIRequest(
@@ -32,6 +31,10 @@ final class ProductRepository {
             request,
             responseType: APIResponse<Product>.self
         )
-        return response.data!
+        
+        guard let product = response.data else {
+             throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message])
+         }
+        return product
     }
 }

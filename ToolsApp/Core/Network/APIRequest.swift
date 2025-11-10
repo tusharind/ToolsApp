@@ -20,3 +20,4 @@ struct APIRequest {
         return request
     }
 }
+
