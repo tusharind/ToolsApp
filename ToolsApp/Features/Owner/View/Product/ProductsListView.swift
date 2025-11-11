@@ -18,7 +18,6 @@ struct ProductsListView: View {
                     Picker("Category", selection: $viewModel.selectedCategoryId)
                     {
                         Text("All").tag(nil as Int?)
-                        // Example categories; replace with dynamic categories if needed
                         Text("Farming").tag(1 as Int?)
                         Text("Electronics").tag(2 as Int?)
                     }

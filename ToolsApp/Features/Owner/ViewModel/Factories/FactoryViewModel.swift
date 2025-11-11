@@ -19,7 +19,7 @@ final class FactoryViewModel: ObservableObject {
     @Published var availableManagers: [Manager] = []
     @Published var isLoadingManagers = false
     @Published var managersErrorMessage: String?
-    @Published var managerSearchText: String = ""  // For searchable dropdown
+    @Published var managerSearchText: String = "" 
 
     private var cancellables = Set<AnyCancellable>()
     private let client = APIClient.shared
@@ -28,7 +28,7 @@ final class FactoryViewModel: ObservableObject {
 
         $searchText
             .removeDuplicates()
-            .debounce(for: .seconds(0.6), scheduler: DispatchQueue.main)
+            .debounce(for: .seconds(1.6), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { await self?.fetchFactories(page: 0) }
             }
@@ -36,6 +36,7 @@ final class FactoryViewModel: ObservableObject {
 
         $selectedCity
             .removeDuplicates()
+            .debounce(for: .seconds(1.6), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { await self?.fetchFactories(page: 0) }
             }

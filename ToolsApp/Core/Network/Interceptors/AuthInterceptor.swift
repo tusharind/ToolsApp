@@ -1,16 +1,16 @@
 import SwiftUI
 
+@MainActor
 final class AuthInterceptor {
     static let shared = AuthInterceptor()
     private init() {}
 
     func intercept(_ request: inout URLRequest) {
-        if let token = UserDefaults.standard.string(forKey: "auth_token") {
-            request.addValue(
-                "Bearer \(token)",
-                forHTTPHeaderField: "Authorization"
-            )
+        // Directly get the current token from AppState singleton
+        if let token = AppState.shared.token {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     }
 }
+

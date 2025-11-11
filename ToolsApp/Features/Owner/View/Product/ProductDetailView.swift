@@ -11,7 +11,7 @@ struct ProductDetailView: View {
         ScrollView {
             VStack(spacing: 16) {
 
-                AsyncImage(url: URL(string: product.image)) { phase in
+                AsyncImage(url: URL(string: product.image ?? "")) { phase in
                     switch phase {
                     case .empty:
                         ProgressView()

@@ -23,6 +23,7 @@ final class LoginViewModel: ObservableObject {
                 email: email,
                 password: password
             )
+            print("Login Response: \(response)")
             if let role = UserRole(rawValue: response.role.lowercased()) {
                 appState.setUserSession(token: response.token, role: role)
             } else {

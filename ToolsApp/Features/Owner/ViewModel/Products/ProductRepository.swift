@@ -25,7 +25,6 @@ final class ProductRepository {
             queryItems.append(URLQueryItem(name: "status", value: status))
         }
 
-        // Construct URL path with query parameters
         let urlString = "/owner/products?" + queryItems.map { "\($0.name)=\($0.value!)" }.joined(separator: "&")
 
         let request = APIRequest(

@@ -27,6 +27,14 @@ var quickLinksSection: some View {
                     destination: OfficesListView()
                 )
             }
+            HStack {
+                QuickLinkCard(
+                    title: "Central Office",
+                    systemImage: "person.3.sequence",
+                    destination: ManagersView()
+                )
+            }
         }
     }
 }
+

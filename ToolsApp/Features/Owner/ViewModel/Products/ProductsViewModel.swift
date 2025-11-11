@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 @MainActor
 final class ProductsViewModel: ObservableObject {
@@ -8,37 +8,51 @@ final class ProductsViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var currentPage = 0
     @Published var totalPages = 1
-
     @Published var searchText: String = ""
     @Published var selectedCategoryId: Int? = nil
     @Published var selectedStatus: String? = nil
 
     private let client = APIClient.shared
     private let repository = ProductRepository()
+    private var fetchTask: Task<Void, Never>?
 
     func fetchProducts(page: Int = 0) async {
-        isLoading = true
-        errorMessage = nil
-        defer { isLoading = false }
+        // Cancel any existing fetch task
+        fetchTask?.cancel()
+        
+        // Create new task with delay
+        fetchTask = Task {
+            // Wait for 300ms (debounce delay)
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            
+            // Check if task was cancelled during sleep
+            guard !Task.isCancelled else { return }
+            
+            isLoading = true
+            errorMessage = nil
+            defer { isLoading = false }
 
-        do {
-            let response = try await repository.fetchProducts(
-                page: page,
-                size: 10,
-                search: searchText,
-                categoryId: selectedCategoryId,
-                status: selectedStatus
-            )
-            products = response.data.content
-            currentPage = response.data.number
-            totalPages = response.data.totalPages
-        } catch is CancellationError {
-            print("Fetch cancelled")
-        } catch {
-            errorMessage =
-                "Failed to load products: \(error.localizedDescription)"
-            print("Error:", error)
+            do {
+                let response = try await repository.fetchProducts(
+                    page: page,
+                    size: 5,
+                    search: searchText,
+                    categoryId: selectedCategoryId,
+                    status: selectedStatus
+                )
+                products = response.data.content
+                currentPage = response.data.number
+                totalPages = response.data.totalPages
+            } catch is CancellationError {
+                print("Fetch cancelled")
+            } catch {
+                errorMessage =
+                    "Failed to load products: \(error.localizedDescription)"
+                print("Error:", error)
+            }
         }
+        
+        await fetchTask?.value
     }
 
     func addProduct(_ newProduct: CreateProductRequest) async -> Bool {

@@ -14,7 +14,7 @@ final class APIClient {
         async throws -> T
     {
         var urlRequest = try request.buildURLRequest(with: config)
-        AuthInterceptor.shared.intercept(&urlRequest)
+        await AuthInterceptor.shared.intercept(&urlRequest)
         LoggerInterceptor.shared.logRequest(urlRequest)
 
         let (data, response) = try await session.data(for: urlRequest)

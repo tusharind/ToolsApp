@@ -5,7 +5,6 @@ struct AddProductView: View {
     @ObservedObject var viewModel: ProductsViewModel
 
     @State private var name: String = ""
-    @State private var imageURL: String = ""
     @State private var description: String = ""
     @State private var price: String = ""
     @State private var rewardPts: String = ""
@@ -18,9 +17,6 @@ struct AddProductView: View {
             Form {
                 Section("Product Details") {
                     TextField("Name", text: $name)
-                    TextField("Image URL", text: $imageURL)
-                        .keyboardType(.URL)
-                        .autocapitalization(.none)
                     TextField("Description", text: $description)
                 }
 
@@ -56,14 +52,12 @@ struct AddProductView: View {
         }
     }
 
-    // MARK: - Form Validation
     private var isFormValid: Bool {
-        !name.isEmpty && !imageURL.isEmpty && !description.isEmpty
+        !name.isEmpty && !description.isEmpty
             && Double(price) != nil && Int(rewardPts) != nil
             && Int(categoryId) != nil
     }
 
-    // MARK: - Submit
     private func submitProduct() async {
         guard let priceValue = Double(price),
             let rewardValue = Int(rewardPts),
@@ -75,7 +69,6 @@ struct AddProductView: View {
 
         let newProduct = CreateProductRequest(
             name: name,
-            image: imageURL,
             prodDescription: description,
             price: priceValue,
             rewardPts: rewardValue,

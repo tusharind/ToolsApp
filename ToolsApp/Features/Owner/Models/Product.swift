@@ -4,7 +4,7 @@ import SwiftUI
 struct Product: Identifiable, Codable {
     let id: Int
     let name: String
-    let image: String
+    let image: String?
     let prodDescription: String
     let price: Double
     let rewardPts: Int
@@ -17,7 +17,6 @@ struct Product: Identifiable, Codable {
 
 struct CreateProductRequest: Encodable {
     let name: String
-    let image: String
     let prodDescription: String
     let price: Double
     let rewardPts: Int

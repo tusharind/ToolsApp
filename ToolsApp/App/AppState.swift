@@ -6,6 +6,8 @@ final class AppState: ObservableObject {
     @Published var isAuthenticated: Bool = false
     @Published var role: UserRole? = nil
     @Published var token: String? = nil
+    
+    static let shared = AppState()
 
     private let tokenKey = "auth_token"
     private let roleKey = "user_role"

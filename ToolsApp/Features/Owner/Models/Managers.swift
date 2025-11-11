@@ -54,3 +54,21 @@ struct SortInfo: Codable {
     let empty: Bool
     let sorted: Bool
 }
+
+struct ManagerCreationResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: Manager
+}
+
+struct PaginatedManagersResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: PaginatedData?
+}
+
+struct PaginatedData: Codable {
+    let content: [Manager]
+    let totalElements: Int
+    let totalPages: Int
+}
