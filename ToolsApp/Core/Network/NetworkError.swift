@@ -6,7 +6,7 @@ enum NetworkError: Error, LocalizedError {
     case unauthorized
     case decodingFailed
     case serverError(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidURL: return "Invalid URL."

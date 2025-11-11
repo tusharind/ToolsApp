@@ -3,24 +3,35 @@ import SwiftUI
 struct FactoriesListView: View {
     @StateObject private var viewModel = FactoryViewModel()
     @State private var showAddFactory = false
-    @State private var searchText = ""
-    
-    // Filtered factories based on search
-    var filteredFactories: [Factory] {
-        if searchText.isEmpty {
-            return viewModel.factories
-        } else {
-            return viewModel.factories.filter { factory in
-                factory.name.localizedCaseInsensitiveContains(searchText) ||
-                factory.city.localizedCaseInsensitiveContains(searchText) ||
-                factory.address.localizedCaseInsensitiveContains(searchText)
-            }
-        }
-    }
+
+    // Local state for city filter
+    @State private var cityFilter: String = ""
 
     var body: some View {
-        NavigationView {
+
             VStack {
+                // MARK: - Filters
+                VStack(spacing: 8) {
+                    // Search bar
+                    TextField("Search factories, cities, or addresses", text: $viewModel.searchText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                        .onChange(of: viewModel.searchText) { _ in
+                            Task { await viewModel.fetchFactories(page: 0) }
+                        }
+
+                    // City filter
+                    TextField("City", text: $cityFilter)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding(.horizontal)
+                        .onChange(of: cityFilter) { newValue in
+                            viewModel.selectedCity = newValue.isEmpty ? nil : newValue
+                            Task { await viewModel.fetchFactories(page: 0) }
+                        }
+                }
+
+                Divider()
+
                 // MARK: - Factory List
                 Group {
                     if viewModel.isLoading && viewModel.factories.isEmpty {
@@ -44,37 +55,20 @@ struct FactoriesListView: View {
                                 .foregroundColor(.gray)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if filteredFactories.isEmpty {
-                        // Show empty search results
-                        VStack(spacing: 16) {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 48))
-                                .foregroundColor(.gray)
-                            Text("No results for '\(searchText)'")
-                                .font(.headline)
-                                .foregroundColor(.gray)
-                            Text("Try searching with a different keyword")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List {
-                            ForEach(filteredFactories) { factory in
-                                NavigationLink(destination: FactoryDetailView(factory: factory)) {
+                            ForEach(viewModel.factories) { factory in
+                                NavigationLink(destination: FactoryDetailView(factory: factory, viewModel: viewModel)) {
                                     FactoryRowView(factory: factory)
                                 }
                                 .onAppear {
-                                    // Only load more if not searching
-                                    if searchText.isEmpty,
-                                       factory == viewModel.factories.last,
+                                    if factory == viewModel.factories.last,
                                        viewModel.currentPage + 1 < viewModel.totalPages {
                                         Task { await viewModel.fetchFactories(page: viewModel.currentPage + 1) }
                                     }
                                 }
                             }
-                            
-                            // Loading indicator for pagination
+
                             if viewModel.isLoading && !viewModel.factories.isEmpty {
                                 HStack {
                                     Spacer()
@@ -91,11 +85,6 @@ struct FactoriesListView: View {
                 }
             }
             .navigationTitle("Factories")
-            .searchable(
-                text: $searchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search factories, cities, or addresses"
-            )
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showAddFactory = true } label: {
@@ -109,10 +98,14 @@ struct FactoriesListView: View {
             .task {
                 await viewModel.fetchFactories()
             }
+            .onAppear {
+                cityFilter = viewModel.selectedCity ?? ""
+            }
         }
     }
-}
+
 
 #Preview {
     FactoriesListView()
 }
+

@@ -19,7 +19,10 @@ final class LoginViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            let response = try await repository.login(email: email, password: password)
+            let response = try await repository.login(
+                email: email,
+                password: password
+            )
             if let role = UserRole(rawValue: response.role.lowercased()) {
                 appState.setUserSession(token: response.token, role: role)
             } else {
@@ -32,4 +35,3 @@ final class LoginViewModel: ObservableObject {
         isLoading = false
     }
 }
-

@@ -4,7 +4,7 @@ struct OfficersListView: View {
     let office: CentralOffice
     @ObservedObject var viewModel: CentralOfficerViewModel
     @State private var showAddOfficer = false
-    
+
     var body: some View {
         VStack {
             HStack {
@@ -15,7 +15,7 @@ struct OfficersListView: View {
                 }
             }
             .padding()
-            
+
             List(viewModel.filteredOfficers(for: office)) { officer in
                 VStack(alignment: .leading) {
                     Text(officer.username)

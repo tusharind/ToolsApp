@@ -3,66 +3,115 @@ import SwiftUI
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
     @EnvironmentObject var appState: AppState
+    @FocusState private var focusedField: Field?
+    @State private var isPasswordVisible = false
+
+    enum Field {
+        case email, password
+    }
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Spacer()
+            VStack(spacing: 24) {
+                Spacer(minLength: 60)
 
-                Text("Welcome Back!")
-                    .font(.largeTitle)
-                    .bold()
+                VStack(spacing: 8) {
+                    Text("Welcome Back")
+                        .font(.largeTitle.bold())
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                TextField("Email", text: $viewModel.email)
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
+                    Text("Sign in to continue")
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                VStack(spacing: 16) {
+
+                    HStack {
+                        Image(systemName: "envelope")
+                            .foregroundColor(.gray)
+                        TextField("Email", text: $viewModel.email)
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .focused($focusedField, equals: .email)
+                            .submitLabel(.next)
+                            .onSubmit {
+                                focusedField = .password
+                            }
+                    }
                     .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(10)
 
-                SecureField("Password", text: $viewModel.password)
+                    HStack {
+                        Image(systemName: "lock")
+                            .foregroundColor(.gray)
+                        Group {
+                            if isPasswordVisible {
+                                TextField("Password", text: $viewModel.password)
+                            } else {
+                                SecureField("Password", text: $viewModel.password)
+                            }
+                        }
+                        .focused($focusedField, equals: .password)
+                        .submitLabel(.done)
+
+                        Button {
+                            withAnimation {
+                                isPasswordVisible.toggle()
+                            }
+                        } label: {
+                            Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                .foregroundColor(.gray)
+                        }
+                    }
                     .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(10)
+                }
+
+                if let error = viewModel.errorMessage {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.red)
+                        Text(error)
+                            .foregroundColor(.red)
+                            .multilineTextAlignment(.leading)
+                            .font(.callout)
+                    }
+                    .padding(.horizontal)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
 
                 Button(action: {
-                    Task {
-                        await viewModel.login(appState: appState)
-                    }
+                    focusedField = nil
+                    Task { await viewModel.login(appState: appState) }
                 }) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .padding()
-                    } else {
-                        Text("Login")
-                            .foregroundColor(.white)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.blue)
-                            .cornerRadius(8)
+                    HStack {
+                        if viewModel.isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Login")
+                                .fontWeight(.semibold)
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .shadow(color: .blue.opacity(0.3), radius: 5, y: 3)
                 }
                 .disabled(viewModel.isLoading)
 
-                // Error Message
-                if let error = viewModel.errorMessage {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 5)
-                }
-
                 Spacer()
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .animation(.easeInOut, value: viewModel.errorMessage)
+            .navigationBarHidden(true)
         }
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView()
-            .environmentObject(AppState())
-    }
-}

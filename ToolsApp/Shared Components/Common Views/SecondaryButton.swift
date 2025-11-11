@@ -1,9 +1,10 @@
+import Foundation
 import SwiftUI
 
 struct SecondaryButton: View {
     var title: String
     var action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -18,3 +19,4 @@ struct SecondaryButton: View {
         }
     }
 }
+

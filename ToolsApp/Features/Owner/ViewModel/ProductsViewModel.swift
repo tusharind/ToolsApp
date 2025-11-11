@@ -9,9 +9,11 @@ final class ProductsViewModel: ObservableObject {
     @Published var currentPage = 0
     @Published var totalPages = 1
 
-    
-    private let client = APIClient.shared
+    @Published var searchText: String = ""
+    @Published var selectedCategoryId: Int? = nil
+    @Published var selectedStatus: String? = nil
 
+    private let client = APIClient.shared
     private let repository = ProductRepository()
 
     func fetchProducts(page: Int = 0) async {
@@ -20,7 +22,13 @@ final class ProductsViewModel: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let response = try await repository.fetchProducts(page: page)
+            let response = try await repository.fetchProducts(
+                page: page,
+                size: 10,
+                search: searchText,
+                categoryId: selectedCategoryId,
+                status: selectedStatus
+            )
             products = response.data.content
             currentPage = response.data.number
             totalPages = response.data.totalPages
@@ -32,7 +40,6 @@ final class ProductsViewModel: ObservableObject {
             print("Error:", error)
         }
     }
-    
 
     func addProduct(_ newProduct: CreateProductRequest) async -> Bool {
         isLoading = true
@@ -46,6 +53,26 @@ final class ProductsViewModel: ObservableObject {
             errorMessage =
                 "Failed to add product: \(error.localizedDescription)"
             print("Error adding product:", error)
+            return false
+        }
+    }
+
+    func deactivateProduct(id: Int) async -> Bool {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let updatedProduct = try await repository.deactivateProduct(id: id)
+
+            if let index = products.firstIndex(where: { $0.id == id }) {
+                products[index] = updatedProduct
+            }
+
+            return true
+        } catch {
+            errorMessage =
+                "Failed to deactivate product: \(error.localizedDescription)"
+            print("Error deactivating product:", error)
             return false
         }
     }

@@ -1,6 +1,5 @@
 import Foundation
 
-// MARK: - Generic API Response Wrapper
 struct APIResponse<T: Decodable>: Decodable {
     let success: Bool
     let message: String
@@ -9,7 +8,6 @@ struct APIResponse<T: Decodable>: Decodable {
     let timestamp: String?
 }
 
-// MARK: - Pagination (Optional)
 struct Pagination: Codable {
     let pageNumber: Int?
     let pageSize: Int?
@@ -19,7 +17,6 @@ struct Pagination: Codable {
     let last: Bool?
 }
 
-// MARK: - Factory List Response
 struct FactoryListResponse: Decodable {
     let content: [Factory]
     let totalElements: Int?
@@ -45,7 +42,6 @@ struct Factory: Identifiable, Codable, Equatable {
     let updatedAt: String?
 }
 
-// MARK: - User (Plant Head)
 struct User: Codable, Identifiable, Equatable {
     var id: Int { userId }
     let userId: Int
@@ -63,7 +59,6 @@ struct User: Codable, Identifiable, Equatable {
     let factoryRole: String?
 }
 
-// MARK: - Create Factory Request
 struct CreateFactoryRequest: Encodable {
     let name: String
     let city: String
@@ -71,7 +66,6 @@ struct CreateFactoryRequest: Encodable {
     let plantHeadId: Int
 }
 
-// MARK: - Create Factory Response
 struct CreateFactoryResponse: Decodable {
     let factoryId: Int
     let name: String
@@ -90,3 +84,4 @@ struct FactoryCountResponse: Decodable {
     let entityType: String
 }
 
+struct EmptyResponse: Decodable {}

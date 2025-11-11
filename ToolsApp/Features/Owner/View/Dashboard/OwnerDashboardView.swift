@@ -3,6 +3,7 @@ import SwiftUI
 
 struct OwnerDashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
+    @State private var navigateToProfile = false
 
     var body: some View {
         NavigationView {
@@ -15,13 +16,31 @@ struct OwnerDashboardView: View {
                 .padding()
             }
             .navigationTitle("Admin Dashboard")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        navigateToProfile = true
+                    } label: {
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .background(
+                NavigationLink(destination: AdminProfileView(), isActive: $navigateToProfile) {
+                    EmptyView()
+                }
+                .hidden()
+            )
             .task {
                 await viewModel.fetchAllMetrics()
             }
         }
     }
 
+    // MARK: - Metrics Section
     private var metricsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Key Metrics")
@@ -68,6 +87,7 @@ struct OwnerDashboardView: View {
         }
     }
 
+    // MARK: - Charts Section
     private var chartsSection: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("Analytics")
@@ -79,18 +99,9 @@ struct OwnerDashboardView: View {
                     .font(.headline)
 
                 Chart {
-                    BarMark(
-                        x: .value("Month", "Jan"),
-                        y: .value("Sales", 12000)
-                    )
-                    BarMark(
-                        x: .value("Month", "Feb"),
-                        y: .value("Sales", 16000)
-                    )
-                    BarMark(
-                        x: .value("Month", "Mar"),
-                        y: .value("Sales", 19000)
-                    )
+                    BarMark(x: .value("Month", "Jan"), y: .value("Sales", 12000))
+                    BarMark(x: .value("Month", "Feb"), y: .value("Sales", 16000))
+                    BarMark(x: .value("Month", "Mar"), y: .value("Sales", 19000))
                 }
                 .frame(height: 220)
                 .padding()
@@ -116,20 +127,21 @@ struct OwnerDashboardView: View {
         }
     }
 
+    // MARK: - Quick Links Section
     private var quickLinksSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Links")
                 .font(.title2)
                 .bold()
 
-            VStack{
+            VStack {
                 HStack {
                     QuickLinkCard(
                         title: "Factory Products",
                         systemImage: "shippingbox.fill",
                         destination: ProductsListView()
                     )
-                    
+
                     QuickLinkCard(
                         title: "Factory List",
                         systemImage: "building.2.fill",
@@ -137,13 +149,6 @@ struct OwnerDashboardView: View {
                     )
                 }
                 HStack {
-                    
-                    QuickLinkCard(
-                        title: "My Profile",
-                        systemImage: "person",
-                        destination: AdminProfileView()
-                    )
-                    
                     QuickLinkCard(
                         title: "Central Office",
                         systemImage: "globe.central.south.asia.fill",
@@ -154,7 +159,6 @@ struct OwnerDashboardView: View {
         }
     }
 }
-
 struct QuickLinkCard<Destination: View>: View {
     let title: String
     let systemImage: String

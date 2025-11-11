@@ -19,7 +19,6 @@ final class DashboardViewModel: ObservableObject {
 
     private let client = APIClient.shared
 
-    // MARK: - Fetch all metrics concurrently
     func fetchAllMetrics() async {
         guard !isLoading else { return }
         isLoading = true
@@ -63,9 +62,6 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 
- 
-  
-    // MARK: - Metric value helper
     func value(for metric: DashboardMetric) -> String? {
         switch metric.title {
         case "Factories": return factoryCount.map(String.init)

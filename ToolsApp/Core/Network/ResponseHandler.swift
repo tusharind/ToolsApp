@@ -10,10 +10,3 @@ enum ResponseHandler { ///pure utility logic (enum is used for grouping mechanis
     }
 }
 
-extension JSONDecoder {
-    static var configured: JSONDecoder {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return decoder
-    }
-}

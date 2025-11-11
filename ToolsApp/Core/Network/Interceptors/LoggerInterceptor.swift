@@ -5,7 +5,9 @@ final class LoggerInterceptor {
     private init() {}
 
     func logRequest(_ request: URLRequest) {
-        print("\(request.httpMethod ?? ""): \(request.url?.absoluteString ?? "")")
+        print(
+            "\(request.httpMethod ?? ""): \(request.url?.absoluteString ?? "")"
+        )
     }
 
     func logResponse(_ data: Data, response: URLResponse?) {

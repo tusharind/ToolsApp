@@ -1,7 +1,6 @@
 import Foundation
 import SwiftUI
 
-// MARK: - Product Model
 struct Product: Identifiable, Codable {
     let id: Int
     let name: String
@@ -16,7 +15,6 @@ struct Product: Identifiable, Codable {
     let updatedAt: String
 }
 
-// MARK: - Create Product Request
 struct CreateProductRequest: Encodable {
     let name: String
     let image: String
@@ -26,7 +24,6 @@ struct CreateProductRequest: Encodable {
     let categoryId: Int
 }
 
-// MARK: - Paginated Products Response
 struct PaginatedProductsResponse: Decodable {
     let success: Bool
     let message: String

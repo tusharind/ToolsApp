@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
-    
+
     var body: some View {
         Group {
             if appState.isAuthenticated {
@@ -47,8 +47,6 @@ struct ChiefSupervisorDashboardView: View {
     }
 }
 
-
-
 struct DistributorDashboardView: View {
     var body: some View {
         Text("Distributor Dashboard (Coming Soon)")
@@ -60,5 +58,5 @@ struct DistributorDashboardView: View {
 
 #Preview {
     RootView()
-        .environmentObject(AppState()) 
+        .environmentObject(AppState())
 }
