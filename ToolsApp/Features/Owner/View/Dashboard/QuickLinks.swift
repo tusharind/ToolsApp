@@ -24,12 +24,12 @@ var quickLinksSection: some View {
                 QuickLinkCard(
                     title: "Central Office",
                     systemImage: "globe.central.south.asia.fill",
-                    destination: OfficesListView()
+                    destination: CentralOfficesView()
                 )
             }
             HStack {
                 QuickLinkCard(
-                    title: "Central Office",
+                    title: "Employees",
                     systemImage: "person.3.sequence",
                     destination: ManagersView()
                 )

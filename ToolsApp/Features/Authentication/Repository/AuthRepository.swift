@@ -14,7 +14,7 @@ final class AuthRepository {
             method: .POST,
             parameters: nil,
             headers: nil,
-            body: body
+            body: body,
         )
 
         let response: LoginResponse = try await network.send(
