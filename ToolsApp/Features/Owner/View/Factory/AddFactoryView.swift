@@ -7,7 +7,8 @@ struct AddFactoryView: View {
     @State private var name: String = ""
     @State private var city: String = ""
     @State private var address: String = ""
-    @State private var plantHeadId: String = ""
+    @State private var selectedManagerId: Int? = nil
+    @State private var managerSearchText: String = ""
 
     @State private var isSubmitting = false
     @State private var showAlert = false
@@ -16,14 +17,61 @@ struct AddFactoryView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: - Factory Details
                 Section("Factory Details") {
                     TextField("Factory Name", text: $name)
                     TextField("City", text: $city)
                     TextField("Address", text: $address)
-                    TextField("Plant Head ID", text: $plantHeadId)
-                        .keyboardType(.numberPad)
                 }
 
+                // MARK: - Assign Manager
+                Section("Assign Manager") {
+                    if viewModel.isLoadingManagers {
+                        ProgressView("Loading managers...")
+                    } else if let error = viewModel.managersErrorMessage {
+                        VStack(alignment: .leading) {
+                            Text(error).foregroundColor(.red)
+                            Button("Retry") {
+                                Task { await viewModel.fetchAvailableManagers() }
+                            }
+                        }
+                    } else {
+                        // Search field
+                        TextField("Search manager...", text: $managerSearchText)
+                            .textFieldStyle(.roundedBorder)
+                            .onChange(of: managerSearchText) { newValue in
+                                Task {
+                                    
+                                await viewModel.searchManagers(query: newValue)
+               
+                                    
+                                }
+                            }
+
+                        if viewModel.availableManagers.isEmpty {
+                            Text("No managers found.").foregroundColor(.gray)
+                        } else {
+                            ScrollView {
+                                ForEach(viewModel.availableManagers) { manager in
+                                    HStack {
+                                        Text(manager.username)
+                                        Spacer()
+                                        if selectedManagerId == manager.id {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(.blue)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        selectedManagerId = manager.id
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // MARK: - Submit Button
                 Section {
                     Button {
                         Task { await createFactory() }
@@ -34,7 +82,13 @@ struct AddFactoryView: View {
                             Text("Create Factory").frame(maxWidth: .infinity)
                         }
                     }
-                    .disabled(isSubmitting || name.isEmpty || city.isEmpty || address.isEmpty || plantHeadId.isEmpty)
+                    .disabled(
+                        isSubmitting ||
+                        name.isEmpty ||
+                        city.isEmpty ||
+                        address.isEmpty ||
+                        selectedManagerId == nil
+                    )
                 }
             }
             .navigationTitle("Add Factory")
@@ -48,24 +102,36 @@ struct AddFactoryView: View {
             } message: {
                 Text(alertMessage)
             }
+            .task {
+                await viewModel.fetchAvailableManagers()
+            }
         }
     }
 
+    // MARK: - Create Factory
     private func createFactory() async {
         isSubmitting = true
         defer { isSubmitting = false }
 
-        guard let headId = Int(plantHeadId) else {
-            alertMessage = "Invalid Plant Head ID"
+        guard let managerId = selectedManagerId else {
+            alertMessage = "Please select a manager"
             showAlert = true
             return
         }
 
-        let request = CreateFactoryRequest(name: name, city: city, address: address, plantHeadId: headId)
-        let success = await viewModel.createFactory(request)
+        let request = CreateFactoryRequest(
+            name: name,
+            city: city,
+            address: address,
+            plantHeadId: managerId
+        )
 
+        let success = await viewModel.createFactory(request)
         alertMessage = success ? "Factory created successfully!" : "Failed to create factory."
         showAlert = true
     }
 }
 
+#Preview {
+    AddFactoryView(viewModel: FactoryViewModel())
+}

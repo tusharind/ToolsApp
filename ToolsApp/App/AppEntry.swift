@@ -2,7 +2,7 @@ import SwiftUI
 
 @main
 struct ToolsAppApp: App {
-    @StateObject private var appState = AppState() //appstate
+    @StateObject private var appState = AppState()
 
     var body: some Scene {
         WindowGroup {
