@@ -10,7 +10,6 @@ struct AddProductView: View {
     @State private var price: String = ""
     @State private var rewardPts: String = ""
     @State private var categoryId: String = ""
-
     @State private var isSubmitting = false
     @State private var errorMessage: String?
 

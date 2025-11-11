@@ -8,14 +8,12 @@ struct ProductsListView: View {
     var body: some View {
         VStack(spacing: 0) {
 
-            // MARK: - Filters
             VStack(spacing: 8) {
-                // Search Bar
+
                 TextField("Search products", text: $viewModel.searchText)
                     .textFieldStyle(.roundedBorder)
                     .padding(.horizontal)
 
-                // Category & Status Pickers
                 HStack(spacing: 16) {
                     Picker("Category", selection: $viewModel.selectedCategoryId)
                     {
@@ -40,7 +38,6 @@ struct ProductsListView: View {
             .padding(.vertical, 8)
             .background(Color(UIColor.secondarySystemBackground))
 
-            // MARK: - Content
             Group {
                 if viewModel.isLoading {
                     ProgressView("Loading products...")

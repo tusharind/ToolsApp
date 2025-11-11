@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProductDetailView: View {
     let product: Product
-    @ObservedObject var viewModel: ProductsViewModel 
+    @ObservedObject var viewModel: ProductsViewModel
     @State private var showAlert = false
     @State private var isProcessing = false
     @State private var showSuccessMessage = false
@@ -53,7 +53,11 @@ struct ProductDetailView: View {
                     }
                 }
                 .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(UIColor.secondarySystemBackground)))
+                .background(
+                    RoundedRectangle(cornerRadius: 12).fill(
+                        Color(UIColor.secondarySystemBackground)
+                    )
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Description")
@@ -63,7 +67,11 @@ struct ProductDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(UIColor.secondarySystemBackground)))
+                .background(
+                    RoundedRectangle(cornerRadius: 12).fill(
+                        Color(UIColor.secondarySystemBackground)
+                    )
+                )
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Additional Info")
@@ -73,7 +81,10 @@ struct ProductDetailView: View {
                         Text("Status:")
                             .bold()
                         Text(product.status.capitalized)
-                            .foregroundColor(product.status.lowercased() == "active" ? .green : .red)
+                            .foregroundColor(
+                                product.status.lowercased() == "active"
+                                    ? .green : .red
+                            )
                     }
 
                     HStack {
@@ -98,7 +109,11 @@ struct ProductDetailView: View {
                     }
                 }
                 .padding()
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(UIColor.secondarySystemBackground)))
+                .background(
+                    RoundedRectangle(cornerRadius: 12).fill(
+                        Color(UIColor.secondarySystemBackground)
+                    )
+                )
 
                 if product.status.lowercased() == "active" {
                     Button {
@@ -107,7 +122,9 @@ struct ProductDetailView: View {
                         HStack {
                             if isProcessing {
                                 ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .progressViewStyle(
+                                        CircularProgressViewStyle(tint: .white)
+                                    )
                                     .padding(.trailing, 8)
                             }
                             Text("Deactivate Product")
@@ -120,12 +137,17 @@ struct ProductDetailView: View {
                         .cornerRadius(12)
                     }
                     .padding(.top)
-                    .alert("Are you sure you want to deactivate this product?", isPresented: $showAlert) {
+                    .alert(
+                        "Are you sure you want to deactivate this product?",
+                        isPresented: $showAlert
+                    ) {
                         Button("Cancel", role: .cancel) {}
                         Button("Deactivate", role: .destructive) {
                             Task {
                                 isProcessing = true
-                                let success = await viewModel.deactivateProduct(id: product.id)
+                                let success = await viewModel.deactivateProduct(
+                                    id: product.id
+                                )
                                 isProcessing = false
                                 if success {
                                     showSuccessMessage = true
@@ -135,7 +157,10 @@ struct ProductDetailView: View {
                     } message: {
                         Text("This action will mark the product as inactive.")
                     }
-                    .alert("Product deactivated successfully!", isPresented: $showSuccessMessage) {
+                    .alert(
+                        "Product deactivated successfully!",
+                        isPresented: $showSuccessMessage
+                    ) {
                         Button("OK", role: .cancel) {}
                     }
                 }
@@ -147,4 +172,3 @@ struct ProductDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-

@@ -17,14 +17,13 @@ struct AddFactoryView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // MARK: - Factory Details
+
                 Section("Factory Details") {
                     TextField("Factory Name", text: $name)
                     TextField("City", text: $city)
                     TextField("Address", text: $address)
                 }
 
-                // MARK: - Assign Manager
                 Section("Assign Manager") {
                     if viewModel.isLoadingManagers {
                         ProgressView("Loading managers...")
@@ -32,19 +31,22 @@ struct AddFactoryView: View {
                         VStack(alignment: .leading) {
                             Text(error).foregroundColor(.red)
                             Button("Retry") {
-                                Task { await viewModel.fetchAvailableManagers() }
+                                Task {
+                                    await viewModel.fetchAvailableManagers()
+                                }
                             }
                         }
                     } else {
-                        // Search field
+
                         TextField("Search manager...", text: $managerSearchText)
                             .textFieldStyle(.roundedBorder)
                             .onChange(of: managerSearchText) { newValue in
                                 Task {
-                                    
-                                await viewModel.searchManagers(query: newValue)
-               
-                                    
+
+                                    await viewModel.searchManagers(
+                                        query: newValue
+                                    )
+
                                 }
                             }
 
@@ -52,7 +54,8 @@ struct AddFactoryView: View {
                             Text("No managers found.").foregroundColor(.gray)
                         } else {
                             ScrollView {
-                                ForEach(viewModel.availableManagers) { manager in
+                                ForEach(viewModel.availableManagers) {
+                                    manager in
                                     HStack {
                                         Text(manager.username)
                                         Spacer()
@@ -71,7 +74,6 @@ struct AddFactoryView: View {
                     }
                 }
 
-                // MARK: - Submit Button
                 Section {
                     Button {
                         Task { await createFactory() }
@@ -83,11 +85,8 @@ struct AddFactoryView: View {
                         }
                     }
                     .disabled(
-                        isSubmitting ||
-                        name.isEmpty ||
-                        city.isEmpty ||
-                        address.isEmpty ||
-                        selectedManagerId == nil
+                        isSubmitting || name.isEmpty || city.isEmpty
+                            || address.isEmpty || selectedManagerId == nil
                     )
                 }
             }
@@ -108,7 +107,6 @@ struct AddFactoryView: View {
         }
     }
 
-    // MARK: - Create Factory
     private func createFactory() async {
         isSubmitting = true
         defer { isSubmitting = false }
@@ -127,7 +125,9 @@ struct AddFactoryView: View {
         )
 
         let success = await viewModel.createFactory(request)
-        alertMessage = success ? "Factory created successfully!" : "Failed to create factory."
+        alertMessage =
+            success
+            ? "Factory created successfully!" : "Failed to create factory."
         showAlert = true
     }
 }

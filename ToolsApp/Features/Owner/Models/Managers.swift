@@ -1,10 +1,5 @@
 import Foundation
 
-
-
-
-// MARK: - Manager Models
-
 struct Manager: Identifiable, Codable, Equatable {
     let id: Int
     let username: String
@@ -23,16 +18,15 @@ struct Manager: Identifiable, Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case id = "userId"
-        case username, email, img, profileImage, role, phone, password, status, createdAt, updatedAt, factoryId, factoryName, factoryRole
+        case username, email, img, profileImage, role, phone, password, status,
+            createdAt, updatedAt, factoryId, factoryName, factoryRole
     }
 }
 
-// List response for managers
 struct ManagerListResponse: Codable {
     let content: [Manager]
 }
 
-// Search response for managers (if your search API returns "data")
 struct ManagerSearchResponse: Codable {
     let success: Bool
     let message: String
@@ -55,14 +49,8 @@ struct ManagerSearchData: Codable {
     let empty: Bool
 }
 
-// MARK: - Pagination & Sorting
-
-
 struct SortInfo: Codable {
     let unsorted: Bool
     let empty: Bool
     let sorted: Bool
 }
-
-
-

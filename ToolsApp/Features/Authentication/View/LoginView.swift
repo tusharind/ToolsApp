@@ -51,7 +51,10 @@ struct LoginView: View {
                             if isPasswordVisible {
                                 TextField("Password", text: $viewModel.password)
                             } else {
-                                SecureField("Password", text: $viewModel.password)
+                                SecureField(
+                                    "Password",
+                                    text: $viewModel.password
+                                )
                             }
                         }
                         .focused($focusedField, equals: .password)
@@ -62,8 +65,11 @@ struct LoginView: View {
                                 isPasswordVisible.toggle()
                             }
                         } label: {
-                            Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                                .foregroundColor(.gray)
+                            Image(
+                                systemName: isPasswordVisible
+                                    ? "eye.slash.fill" : "eye.fill"
+                            )
+                            .foregroundColor(.gray)
                         }
                     }
                     .padding()
@@ -114,4 +120,3 @@ struct LoginView: View {
         }
     }
 }
-

@@ -9,21 +9,24 @@ struct FactoriesListView: View {
         VStack {
             // MARK: - Filters
             VStack(spacing: 8) {
-                TextField("Search factories, cities, or addresses", text: $viewModel.searchText)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
+                TextField(
+                    "Search factories, cities, or addresses",
+                    text: $viewModel.searchText
+                )
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .padding(.horizontal)
 
                 TextField("City", text: $cityFilter)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                     .onChange(of: cityFilter) { newValue in
-                        viewModel.selectedCity = newValue.isEmpty ? nil : newValue
+                        viewModel.selectedCity =
+                            newValue.isEmpty ? nil : newValue
                     }
             }
 
             Divider()
 
-            // MARK: - Factory List
             Group {
                 if viewModel.isLoading && viewModel.factories.isEmpty {
                     ProgressView("Loading factories...")
@@ -33,7 +36,11 @@ struct FactoriesListView: View {
                         Text(error)
                             .foregroundColor(.red)
                         Button("Retry") {
-                            Task { await viewModel.fetchFactories(page: viewModel.currentPage) }
+                            Task {
+                                await viewModel.fetchFactories(
+                                    page: viewModel.currentPage
+                                )
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -49,13 +56,24 @@ struct FactoriesListView: View {
                 } else {
                     List {
                         ForEach(viewModel.factories) { factory in
-                            NavigationLink(destination: FactoryDetailView(factory: factory, viewModel: viewModel)) {
+                            NavigationLink(
+                                destination: FactoryDetailView(
+                                    factory: factory,
+                                    viewModel: viewModel
+                                )
+                            ) {
                                 FactoryRowView(factory: factory)
                             }
                             .onAppear {
                                 if factory == viewModel.factories.last,
-                                   viewModel.currentPage + 1 < viewModel.totalPages {
-                                    Task { await viewModel.fetchFactories(page: viewModel.currentPage + 1) }
+                                    viewModel.currentPage + 1
+                                        < viewModel.totalPages
+                                {
+                                    Task {
+                                        await viewModel.fetchFactories(
+                                            page: viewModel.currentPage + 1
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -88,7 +106,8 @@ struct FactoriesListView: View {
                     }
 
                     Section("Sort Direction") {
-                        Picker("Direction", selection: $viewModel.sortDirection) {
+                        Picker("Direction", selection: $viewModel.sortDirection)
+                        {
                             ForEach(SortDirection.allCases) { dir in
                                 Text(dir.displayName).tag(dir)
                             }
@@ -100,7 +119,9 @@ struct FactoriesListView: View {
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button { showAddFactory = true } label: {
+                Button {
+                    showAddFactory = true
+                } label: {
                     Image(systemName: "plus")
                 }
             }

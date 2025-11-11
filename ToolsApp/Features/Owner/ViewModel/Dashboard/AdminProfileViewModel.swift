@@ -23,14 +23,18 @@ final class AdminProfileViewModel: ObservableObject {
         )
 
         do {
-            let response: AdminProfileResponse = try await client.send(request, responseType: AdminProfileResponse.self)
+            let response: AdminProfileResponse = try await client.send(
+                request,
+                responseType: AdminProfileResponse.self
+            )
             if response.success, let data = response.data {
                 self.profile = data
             } else {
                 self.errorMessage = response.message
             }
         } catch {
-            self.errorMessage = "Failed to fetch profile: \(error.localizedDescription)"
+            self.errorMessage =
+                "Failed to fetch profile: \(error.localizedDescription)"
         }
 
         isLoading = false
@@ -57,17 +61,20 @@ final class AdminProfileViewModel: ObservableObject {
         )
 
         do {
-            let response: AdminProfileResponse = try await client.send(request, responseType: AdminProfileResponse.self)
+            let response: AdminProfileResponse = try await client.send(
+                request,
+                responseType: AdminProfileResponse.self
+            )
             if response.success, let updatedProfile = response.data {
                 self.profile = updatedProfile
             } else {
                 self.errorMessage = response.message
             }
         } catch {
-            self.errorMessage = "Failed to update image: \(error.localizedDescription)"
+            self.errorMessage =
+                "Failed to update image: \(error.localizedDescription)"
         }
 
         isUpdatingImage = false
     }
 }
-

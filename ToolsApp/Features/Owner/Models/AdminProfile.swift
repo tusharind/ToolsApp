@@ -1,6 +1,6 @@
 import Foundation
 
-struct Adminprofile: Identifiable,Codable {
+struct Adminprofile: Identifiable, Codable {
     let id: Int
     let username: String
     let email: String
@@ -8,7 +8,7 @@ struct Adminprofile: Identifiable,Codable {
     let phone: String?
     let role: String?
     let status: String?
-    
+
     private enum CodingKeys: String, CodingKey {
         case id = "userId"
         case username
@@ -19,7 +19,6 @@ struct Adminprofile: Identifiable,Codable {
         case status
     }
 }
-
 
 struct AdminProfileResponse: Codable {
     let success: Bool
@@ -32,5 +31,3 @@ struct AdminProfileResponse: Codable {
 struct UpdateProfileImageRequest: Encodable {
     let img: String
 }
-
-

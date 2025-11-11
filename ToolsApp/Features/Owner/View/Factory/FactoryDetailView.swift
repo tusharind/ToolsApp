@@ -1,6 +1,5 @@
 import SwiftUI
 
-// MARK: - Alert Message Wrapper
 struct AlertMessage: Identifiable {
     let id = UUID()
     let message: String
@@ -9,7 +8,7 @@ struct AlertMessage: Identifiable {
 struct FactoryDetailView: View {
     let factory: Factory
     @ObservedObject var viewModel: FactoryViewModel
-    
+
     @State private var showConfirmation = false
     @State private var isProcessing = false
     @State private var alertMessage: AlertMessage?
@@ -17,7 +16,7 @@ struct FactoryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-           
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text(factory.name).font(.title2.bold())
                     HStack {
@@ -31,7 +30,11 @@ struct FactoryDetailView: View {
                         .font(.footnote)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(factory.status == "ACTIVE" ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                        .background(
+                            factory.status == "ACTIVE"
+                                ? Color.green.opacity(0.2)
+                                : Color.red.opacity(0.2)
+                        )
                         .cornerRadius(8)
                 }
                 .padding()
@@ -65,21 +68,27 @@ struct FactoryDetailView: View {
                 Button(role: .destructive) {
                     showConfirmation = true
                 } label: {
-                    Text(isProcessing ? "Deactivating..." : "Deactivate Factory")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.2))
-                        .foregroundColor(.red)
-                        .cornerRadius(12)
-                        .bold()
+                    Text(
+                        isProcessing ? "Deactivating..." : "Deactivate Factory"
+                    )
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red.opacity(0.2))
+                    .foregroundColor(.red)
+                    .cornerRadius(12)
+                    .bold()
                 }
                 .disabled(isProcessing)
                 .padding(.top)
-                .confirmationDialog("Are you sure you want to deactivate this factory?", isPresented: $showConfirmation, titleVisibility: .visible) {
+                .confirmationDialog(
+                    "Are you sure you want to deactivate this factory?",
+                    isPresented: $showConfirmation,
+                    titleVisibility: .visible
+                ) {
                     Button("Yes, Deactivate", role: .destructive) {
                         Task { await deactivateFactory() }
                     }
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {}
                 }
             }
             .padding()
@@ -87,7 +96,11 @@ struct FactoryDetailView: View {
         .navigationTitle("Factory Details")
         .navigationBarTitleDisplayMode(.inline)
         .alert(item: $alertMessage) { alert in
-            Alert(title: Text("Info"), message: Text(alert.message), dismissButton: .default(Text("OK")))
+            Alert(
+                title: Text("Info"),
+                message: Text(alert.message),
+                dismissButton: .default(Text("OK"))
+            )
         }
     }
 
@@ -95,7 +108,10 @@ struct FactoryDetailView: View {
         isProcessing = true
         let success = await viewModel.deactivateFactory(id: factory.factoryId)
         isProcessing = false
-        alertMessage = AlertMessage(message: success ? "Factory deactivated successfully" : (viewModel.errorMessage ?? "Unknown error"))
+        alertMessage = AlertMessage(
+            message: success
+                ? "Factory deactivated successfully"
+                : (viewModel.errorMessage ?? "Unknown error")
+        )
     }
 }
-

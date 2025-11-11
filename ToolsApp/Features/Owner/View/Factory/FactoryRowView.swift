@@ -11,7 +11,9 @@ struct FactoryRowView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(factory.name).font(.headline)
-                Text(factory.city).font(.subheadline).foregroundColor(.secondary)
+                Text(factory.city).font(.subheadline).foregroundColor(
+                    .secondary
+                )
                 if let plantHead = factory.plantHead {
                     Text("Manager: \(plantHead.username)")
                         .font(.caption)
@@ -24,10 +26,12 @@ struct FactoryRowView: View {
                 .fontWeight(.semibold)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(factory.status == "ACTIVE" ? Color.green.opacity(0.2) : Color.red.opacity(0.2))
+                .background(
+                    factory.status == "ACTIVE"
+                        ? Color.green.opacity(0.2) : Color.red.opacity(0.2)
+                )
                 .cornerRadius(8)
         }
         .padding(.vertical, 8)
     }
 }
-
