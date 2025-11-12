@@ -1,45 +1,57 @@
 import SwiftUI
 
 var quickLinksSection: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: 16) {
         Text("Quick Links")
             .font(.title2)
             .bold()
+            .padding(.horizontal)
 
-        VStack {
-            HStack {
-                QuickLinkCard(
-                    title: "Factory Products",
-                    systemImage: "shippingbox.fill",
-                    destination: ProductsListView()
-                )
+        // Grid-like layout
+        LazyVGrid(
+            columns: [GridItem(.flexible()), GridItem(.flexible())],
+            spacing: 16
+        ) {
+            QuickLinkCard(
+                title: "Factory Products",
+                systemImage: "shippingbox.fill",
+                destination: ProductsListView()
+            )
 
-                QuickLinkCard(
-                    title: "Factory List",
-                    systemImage: "building.2.fill",
-                    destination: FactoriesListView()
-                )
-            }
-            HStack {
-                QuickLinkCard(
-                    title: "Central Office",
-                    systemImage: "globe.central.south.asia.fill",
-                    destination: CentralOfficesView()
-                )
-            }
-            HStack {
-                QuickLinkCard(
-                    title: "Employees",
-                    systemImage: "person.3.sequence",
-                    destination: ManageEmployeesView()
-                )
-            }
+            QuickLinkCard(
+                title: "Factory List",
+                systemImage: "building.2.fill",
+                destination: FactoriesListView()
+            )
+
+            QuickLinkCard(
+                title: "Central Office",
+                systemImage: "globe.central.south.asia.fill",
+                destination: CentralOfficesView()
+            )
+
+            QuickLinkCard(
+                title: "Employees",
+                systemImage: "person.3.sequence",
+                destination: EmployeeListView()
+            )
+
             QuickLinkCard(
                 title: "Product Categories",
-                systemImage: "tag.circle.milk",
+                systemImage: "paperclip",
                 destination: CategoriesListView()
-                )
+            )
+
+            QuickLinkCard(
+                title: "Managers",
+                systemImage: "books.vertical.circle.fill",
+                destination: ManagersView()
+            )
         }
+        .padding(.horizontal)
     }
+    .padding(.vertical)
 }
+
+
 
