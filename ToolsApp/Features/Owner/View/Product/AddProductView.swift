@@ -8,7 +8,6 @@ struct AddProductView: View {
     @State private var description: String = ""
     @State private var price: String = ""
     @State private var rewardPts: String = ""
-    @State private var categoryId: String = ""
     @State private var isSubmitting = false
     @State private var errorMessage: String?
 
@@ -28,8 +27,41 @@ struct AddProductView: View {
                 }
 
                 Section("Category") {
-                    TextField("Category ID", text: $categoryId)
-                        .keyboardType(.numberPad)
+                    VStack(spacing: 0) {
+                        TextField("Search Category", text: $viewModel.categorySearchText)
+                            .onChange(of: viewModel.categorySearchText) { _ in
+                                Task { await viewModel.searchCategories() }
+                            }
+
+                        if viewModel.isCategoryLoading {
+                            ProgressView()
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        }
+
+                        if !viewModel.categories.isEmpty {
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    ForEach(viewModel.categories) { category in
+                                        Button(action: {
+                                            viewModel.selectedCategoryId = category.id
+                                            viewModel.selectedCategoryName = category.categoryName
+                                            viewModel.categorySearchText = category.categoryName
+                                            hideKeyboard()
+                                        }) {
+                                            Text(category.categoryName)
+                                                .padding()
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                        Divider()
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 200)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                    }
                 }
 
                 if let error = errorMessage {
@@ -55,13 +87,13 @@ struct AddProductView: View {
     private var isFormValid: Bool {
         !name.isEmpty && !description.isEmpty
             && Double(price) != nil && Int(rewardPts) != nil
-            && Int(categoryId) != nil
+            && viewModel.selectedCategoryId != nil
     }
 
     private func submitProduct() async {
         guard let priceValue = Double(price),
-            let rewardValue = Int(rewardPts),
-            let catId = Int(categoryId)
+              let rewardValue = Int(rewardPts),
+              let catId = viewModel.selectedCategoryId
         else { return }
 
         isSubmitting = true
@@ -85,3 +117,13 @@ struct AddProductView: View {
         }
     }
 }
+
+// Helper to dismiss keyboard
+#if canImport(UIKit)
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+}
+#endif
+

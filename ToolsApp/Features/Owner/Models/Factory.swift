@@ -84,7 +84,7 @@ struct FactoryCountResponse: Decodable {
     let entityType: String
 }
 
-struct EmptyResponse: Decodable {}
+struct EmptyResponse: Codable {}
 
 enum SortBy: String, CaseIterable, Identifiable {
     case createdAt
@@ -112,4 +112,12 @@ enum SortDirection: String, CaseIterable, Identifiable {
         case .descending: return "Descending"
         }
     }
+}
+
+struct ToggleResponse<T: Codable>: Codable {
+    let success: Bool
+    let message: String
+    let data: T?
+    let pagination: Pagination?
+    let timestamp: String?
 }

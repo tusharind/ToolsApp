@@ -15,11 +15,10 @@ final class FactoryViewModel: ObservableObject {
     @Published var sortBy: SortBy = .createdAt
     @Published var sortDirection: SortDirection = .descending
 
-    // MARK: - Manager Properties
     @Published var availableManagers: [Manager] = []
     @Published var isLoadingManagers = false
     @Published var managersErrorMessage: String?
-    @Published var managerSearchText: String = "" 
+    @Published var managerSearchText: String = ""
 
     private var cancellables = Set<AnyCancellable>()
     private let client = APIClient.shared
@@ -117,7 +116,6 @@ final class FactoryViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - Create Factory
     func createFactory(_ factoryRequest: CreateFactoryRequest) async -> Bool {
         isLoading = true
         errorMessage = nil
@@ -149,12 +147,13 @@ final class FactoryViewModel: ObservableObject {
         return false
     }
 
-    func deactivateFactory(id: Int) async -> Bool {
+    func toggleFactoryStatus(id: Int) async -> Bool {
         isLoading = true
         errorMessage = nil
+
         let request = APIRequest(
-            path: "/owner/deleteFactory/\(id)",
-            method: .DELETE,
+            path: "/owner/factory/\(id)/toggle-status",
+            method: .PUT,
             parameters: nil,
             headers: nil,
             body: nil
@@ -163,18 +162,23 @@ final class FactoryViewModel: ObservableObject {
         do {
             let response = try await client.send(
                 request,
-                responseType: APIResponse<EmptyResponse>.self
+                responseType: ToggleResponse<EmptyResponse>.self
             )
+
             if response.success {
                 await fetchFactories(page: 0)
+                isLoading = false
                 return true
             } else {
                 errorMessage = response.message
+                isLoading = false
                 return false
             }
+
         } catch {
             errorMessage =
-                "Failed to deactivate factory: \(error.localizedDescription)"
+                "Failed to toggle factory status: \(error.localizedDescription)"
+            isLoading = false
             return false
         }
     }

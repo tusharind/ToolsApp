@@ -31,9 +31,14 @@ var quickLinksSection: some View {
                 QuickLinkCard(
                     title: "Employees",
                     systemImage: "person.3.sequence",
-                    destination: ManagersView()
+                    destination: ManageEmployeesView()
                 )
             }
+            QuickLinkCard(
+                title: "Product Categories",
+                systemImage: "tag.circle.milk",
+                destination: CategoriesListView()
+                )
         }
     }
 }

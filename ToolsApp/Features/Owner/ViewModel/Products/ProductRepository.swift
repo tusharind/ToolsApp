@@ -111,6 +111,16 @@ final class ProductRepository {
         }
         return product
     }
+    
+    func searchCategories(query: String) async throws -> [Category] {
+            let urlString = "/product/categories/search?search=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+            let request = APIRequest(path: urlString, method: .GET)
+            let response = try await APIClient.shared.send(
+                request,
+                responseType: APIResponse<[Category]>.self
+            )
+            return response.data ?? []
+        }
 
     
 }
