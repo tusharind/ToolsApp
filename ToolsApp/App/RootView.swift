@@ -10,7 +10,7 @@ struct RootView: View {
                 case .owner:
                    OwnerDashboardView()
                 case .chiefOfficer:
-                    Text("")
+                    Text("Temporary Placeholder")
                 case .manager:
                     ManagerDashboardView()
                 case .chiefSupervisor:

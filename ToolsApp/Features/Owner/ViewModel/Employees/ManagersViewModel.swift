@@ -6,17 +6,15 @@ final class ManagersViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    // Pagination info
     @Published var currentPage = 0
     @Published var totalPages = 1
-    
+
     private let client = APIClient.shared
 
-    // MARK: - Create Manager
     func createManager(username: String, email: String, phone: String) async {
         isLoading = true
         errorMessage = nil
-        
+
         let body = ["username": username, "email": email, "phone": phone]
         let request = APIRequest(
             path: "/owner/managers/create",
@@ -25,9 +23,12 @@ final class ManagersViewModel: ObservableObject {
             headers: nil,
             body: body
         )
-        
+
         do {
-            let response: ManagerCreationResponse = try await client.send(request, responseType: ManagerCreationResponse.self)
+            let response: ManagerCreationResponse = try await client.send(
+                request,
+                responseType: ManagerCreationResponse.self
+            )
             managers.append(response.data)
         } catch {
             errorMessage = error.localizedDescription
@@ -35,16 +36,17 @@ final class ManagersViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - Fetch / Search Managers
-    func fetchManagers(search: String? = nil, page: Int = 0, size: Int = 20) async {
+    func fetchManagers(search: String? = nil, page: Int = 0, size: Int = 20)
+        async
+    {
         isLoading = true
         errorMessage = nil
-        
+
         var query = "?page=\(page)&size=\(size)"
         if let search = search, !search.isEmpty {
             query += "&search=\(search)"
         }
-        
+
         let request = APIRequest(
             path: "/owner/managers/\(query)",
             method: .GET,
@@ -52,9 +54,12 @@ final class ManagersViewModel: ObservableObject {
             headers: nil,
             body: nil
         )
-        
+
         do {
-            let response: PaginatedManagersResponse = try await client.send(request, responseType: PaginatedManagersResponse.self)
+            let response: PaginatedManagersResponse = try await client.send(
+                request,
+                responseType: PaginatedManagersResponse.self
+            )
             managers = response.data?.content ?? []
             totalPages = response.data?.totalPages ?? 1
             currentPage = page
@@ -64,4 +69,3 @@ final class ManagersViewModel: ObservableObject {
         isLoading = false
     }
 }
-

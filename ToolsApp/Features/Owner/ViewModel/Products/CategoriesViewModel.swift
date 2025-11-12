@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 @MainActor
 final class CategoriesViewModel: ObservableObject {
@@ -9,9 +9,9 @@ final class CategoriesViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var page: Int = 0
     @Published var hasMorePages: Bool = true
-    
+
     private let pageSize = 10
-    
+
     func fetchCategories(reset: Bool = false) async {
         guard !isLoading else { return }
         if reset {
@@ -20,23 +20,31 @@ final class CategoriesViewModel: ObservableObject {
             categories.removeAll()
         }
         guard hasMorePages else { return }
-        
+
         isLoading = true
         errorMessage = nil
-        
+
         let queryItems: [String: Any] = [
             "page": page,
             "size": pageSize,
             "sortBy": "categoryName",
-            "sortDirection": "ASC"
+            "sortDirection": "ASC",
         ]
-        
+
         let path = "/product/categories/"
-        let request = APIRequest(path: path, method: .GET, parameters: queryItems)
-        
+        let request = APIRequest(
+            path: path,
+            method: .GET,
+            parameters: queryItems
+        )
+
         do {
-            let response: APIResponse<CategoriesResponseData> = try await APIClient.shared.send(request, responseType: APIResponse<CategoriesResponseData>.self)
-            
+            let response: APIResponse<CategoriesResponseData> =
+                try await APIClient.shared.send(
+                    request,
+                    responseType: APIResponse<CategoriesResponseData>.self
+                )
+
             if let data = response.data {
                 categories.append(contentsOf: data.content)
                 hasMorePages = !data.last
@@ -49,13 +57,22 @@ final class CategoriesViewModel: ObservableObject {
         }
         isLoading = false
     }
-    
+
     func addCategory(name: String, description: String) async -> Bool {
         let body = ["categoryName": name, "description": description]
-        let request = APIRequest(path: "/product/categories/createCategory", method: .POST,  headers: nil ,body: body)
-        
+        let request = APIRequest(
+            path: "/product/categories/createCategory",
+            method: .POST,
+            headers: nil,
+            body: body
+        )
+
         do {
-            let response: APIResponse<EmptyResponse> = try await APIClient.shared.send(request, responseType: APIResponse<EmptyResponse>.self)
+            let response: APIResponse<EmptyResponse> =
+                try await APIClient.shared.send(
+                    request,
+                    responseType: APIResponse<EmptyResponse>.self
+                )
             if response.success {
                 await fetchCategories(reset: true)
                 return true
@@ -69,4 +86,3 @@ final class CategoriesViewModel: ObservableObject {
         }
     }
 }
-

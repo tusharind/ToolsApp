@@ -29,7 +29,7 @@ struct AddProductView: View {
                 Section("Category") {
                     VStack(spacing: 0) {
                         TextField("Search Category", text: $viewModel.categorySearchText)
-                            .onChange(of: viewModel.categorySearchText) { _ in
+                            .onChange(of: viewModel.categorySearchText) { newValue,oldValue in
                                 Task { await viewModel.searchCategories() }
                             }
 

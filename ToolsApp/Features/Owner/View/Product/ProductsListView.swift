@@ -107,13 +107,13 @@ struct ProductsListView: View {
                         .listStyle(.insetGrouped)
                     }
                 }
-                .onChange(of: viewModel.searchText) { _ in
+                .onChange(of: viewModel.searchText) { newValue,oldValue in
                     Task { await viewModel.fetchProducts() }
                 }
-                .onChange(of: viewModel.selectedCategoryId) { _ in
+                .onChange(of: viewModel.selectedCategoryId) { newValue,oldValue in
                     Task { await viewModel.fetchProducts() }
                 }
-                .onChange(of: viewModel.selectedStatus) { _ in
+                .onChange(of: viewModel.selectedStatus) { newValue,oldValue in
                     Task { await viewModel.fetchProducts() }
                 }
             }

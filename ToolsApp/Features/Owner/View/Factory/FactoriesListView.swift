@@ -19,7 +19,7 @@ struct FactoriesListView: View {
                 TextField("City", text: $cityFilter)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
-                    .onChange(of: cityFilter) { newValue in
+                    .onChange(of: cityFilter) { newValue,oldValue in
                         viewModel.selectedCity =
                             newValue.isEmpty ? nil : newValue
                     }

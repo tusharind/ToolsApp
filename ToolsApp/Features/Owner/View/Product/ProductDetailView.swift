@@ -93,7 +93,7 @@ extension ProductDetailView {
             .cornerRadius(12)
         }
         .disabled(isProcessing)
-        .onChange(of: selectedItem) { newItem in
+        .onChange(of: selectedItem) { newValue,oldValue in
             guard let item = newItem else { return }
             Task { await uploadSelectedImage(item) }
         }

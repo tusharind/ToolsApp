@@ -22,7 +22,7 @@ struct ManagersView: View {
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
                         .padding(.horizontal)
-                        .onChange(of: searchText) { newValue in
+                        .onChange(of: searchText) { newValue,oldValue in
                             // Cancel previous task if user types again
                             searchTask?.cancel()
                             

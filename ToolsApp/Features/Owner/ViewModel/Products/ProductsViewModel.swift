@@ -27,7 +27,6 @@ final class ProductsViewModel: ObservableObject {
         Task { await loadAllCategories() }
     }
 
-    // MARK: - Fetch products
     func fetchProducts(page: Int = 0) async {
         fetchTask?.cancel()
         fetchTask = Task {
@@ -59,7 +58,6 @@ final class ProductsViewModel: ObservableObject {
         await fetchTask?.value
     }
 
-    // MARK: - Add product
     func addProduct(_ newProduct: CreateProductRequest) async -> Bool {
         isLoading = true
         defer { isLoading = false }
@@ -75,7 +73,6 @@ final class ProductsViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Load all categories initially
     func loadAllCategories() async {
         isCategoryLoading = true
         defer { isCategoryLoading = false }
@@ -88,7 +85,6 @@ final class ProductsViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Filter categories based on search text
     func searchCategories() async {
         categoryTask?.cancel()
         categoryTask = Task {

@@ -40,7 +40,7 @@ struct AddFactoryView: View {
 
                         TextField("Search manager...", text: $managerSearchText)
                             .textFieldStyle(.roundedBorder)
-                            .onChange(of: managerSearchText) { newValue in
+                            .onChange(of: managerSearchText) { newValue,oldValue in
                                 Task {
 
                                     await viewModel.searchManagers(
