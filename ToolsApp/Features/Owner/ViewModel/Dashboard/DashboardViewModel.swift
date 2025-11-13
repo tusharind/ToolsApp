@@ -33,7 +33,6 @@ final class DashboardViewModel: ObservableObject {
         isLoading = false
     }
 
-    // MARK: - Fetch individual metrics
     func fetchFactoryCount() async {
         let request = APIRequest(path: "/owner/count", method: .GET, parameters: nil, headers: nil, body: nil)
         do {

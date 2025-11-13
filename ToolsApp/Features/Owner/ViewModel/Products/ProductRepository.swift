@@ -82,18 +82,16 @@ final class ProductRepository {
     }
     
     func uploadImage(productId: Int, imageData: Data, fileName: String) async throws -> Product {
-        // Prepare multipart form data boundary
+
         let boundary = UUID().uuidString
         var body = Data()
 
-        // Add image file
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"imageFile\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
         body.append(imageData)
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
 
-        // Create APIRequest using your consistent structure
         let request = APIRequest(
             path: "/owner/uploadImage/\(productId)",
             method: .POST,
@@ -102,10 +100,8 @@ final class ProductRepository {
             body: body
         )
 
-        // Let the APIClient handle interceptors, logging, and decoding
         let response = try await client.send(request, responseType: APIResponse<Product>.self)
 
-        // Validate and return product
         guard let product = response.data else {
             throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message])
         }

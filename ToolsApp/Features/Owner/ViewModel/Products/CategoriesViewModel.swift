@@ -4,13 +4,30 @@ import SwiftUI
 @MainActor
 final class CategoriesViewModel: ObservableObject {
     @Published var categories: [CategoryName] = []
-    @Published var searchText: String = ""
+    @Published var searchText: String = "" {
+        didSet { validateSearchText() }
+    }
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var page: Int = 0
     @Published var hasMorePages: Bool = true
 
     private let pageSize = 10
+
+    private func validateSearchText() {
+
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let cleaned = trimmed.replacingOccurrences(
+            of: #"[^A-Za-z0-9\s@._-]"#,
+            with: "",
+            options: .regularExpression
+        )
+
+        if cleaned != searchText {
+            searchText = cleaned
+        }
+    }
 
     func fetchCategories(reset: Bool = false) async {
         guard !isLoading else { return }
@@ -86,3 +103,4 @@ final class CategoriesViewModel: ObservableObject {
         }
     }
 }
+

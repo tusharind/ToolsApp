@@ -58,7 +58,7 @@ final class AppState: ObservableObject {
         SecItemAdd(query as CFDictionary, nil)
     }
 
-    private func readFromKeychain(forKey key: String) -> String? {
+     func readFromKeychain(forKey key: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: key,

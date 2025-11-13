@@ -60,3 +60,19 @@ struct ProductCountResponse: Decodable {
 }
 
 
+struct UploadProductImageResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: EmptyData?
+    let pagination: Pagination?
+    let timestamp: String?
+}
+
+struct Category: Identifiable, Codable {
+    let id: Int
+    let categoryName: String
+    let description: String?
+    let productCount: Int?
+}
+
+struct EmptyData: Codable {}

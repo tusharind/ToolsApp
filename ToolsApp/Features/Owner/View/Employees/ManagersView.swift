@@ -7,36 +7,32 @@ struct ManagersView: View {
     @State private var username = ""
     @State private var email = ""
     @State private var phone = ""
-    
-    @State private var searchText = ""
     @State private var searchTask: Task<Void, Never>? = nil
-
+    
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
-                
                 VStack {
-                    // MARK: - Search Bar
-                    TextField("Search managers...", text: $searchText)
+                    // MARK: - Search Field
+                    TextField("Search managers...", text: $viewModel.searchText)
                         .padding(10)
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
                         .padding(.horizontal)
-                        .onChange(of: searchText) { newValue,oldValue in
-                            // Cancel previous task if user types again
+                        .onChange(of: viewModel.searchText) {
+                            newValue,
+                            oldValue in
                             searchTask?.cancel()
-                            
-                            // Debounce for 0.5 seconds
                             searchTask = Task {
-                                try? await Task.sleep(nanoseconds: 900_000_000) // 0.5 sec
+                                try? await Task.sleep(nanoseconds: 900_000_000)  // 0.9 sec debounce
                                 if !Task.isCancelled {
-                                    await viewModel.fetchManagers(search: newValue)
+                                    await viewModel.fetchManagers()
                                 }
                             }
                         }
                     
-                    // MARK: - Main List
-                    VStack{
+                    // MARK: - List + States
+                    VStack {
                         if viewModel.isLoading {
                             VStack {
                                 Spacer()
@@ -51,7 +47,7 @@ struct ManagersView: View {
                                     .multilineTextAlignment(.center)
                                     .padding()
                                 Button("Retry") {
-                                    Task { await viewModel.fetchManagers(search: searchText) }
+                                    Task { await viewModel.fetchManagers() }
                                 }
                                 .buttonStyle(.borderedProminent)
                                 Spacer()
@@ -78,7 +74,7 @@ struct ManagersView: View {
                     }
                 }
                 
-                // MARK: - Floating Add Button
+                // MARK: - Add Button
                 Button {
                     showingAddManager = true
                 } label: {
@@ -117,7 +113,7 @@ struct ManagersView: View {
                                             username = ""
                                             email = ""
                                             phone = ""
-                                            await viewModel.fetchManagers(search: searchText)
+                                            await viewModel.fetchManagers()
                                         }
                                     }
                                 } label: {
@@ -129,7 +125,10 @@ struct ManagersView: View {
                                     }
                                 }
                                 .buttonStyle(.borderedProminent)
-                                .disabled(username.isEmpty || email.isEmpty || phone.isEmpty)
+                                .disabled(
+                                    username.isEmpty || email.isEmpty
+                                    || phone.isEmpty
+                                )
                             }
                         }
                         .navigationTitle("Add Manager")
@@ -149,6 +148,15 @@ struct ManagersView: View {
 
 struct ManagerCardView: View {
     let manager: Manager
+    
+    private func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "active": return .green
+        case "inactive": return .red
+        case "pending": return .orange
+        default: return .blue
+        }
+    }
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -209,11 +217,9 @@ struct ManagerCardView: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 
-                HStack(spacing: 10) {
-                    Label(manager.role, systemImage: "person.fill")
-                        .font(.caption2)
-                        .foregroundColor(.blue)
-                }
+                Label(manager.role, systemImage: "person.fill")
+                    .font(.caption2)
+                    .foregroundColor(.blue)
                 
                 if let factoryName = manager.factoryName {
                     Text("Factory: \(factoryName)")
@@ -222,39 +228,16 @@ struct ManagerCardView: View {
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
-                
             }
             
             Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .frame(height: 130) // Fixed height for uniformity
+        .frame(height: 130)
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
         .padding(.horizontal)
     }
-    
-    // MARK: - Helper Functions
-    
-    func statusColor(_ status: String) -> Color {
-        switch status.lowercased() {
-        case "active": return .green
-        case "inactive": return .red
-        case "pending": return .orange
-        default: return .blue
-        }
-    }
-    
-    func formattedDate(_ dateString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        if let date = formatter.date(from: dateString) {
-            let outputFormatter = DateFormatter()
-            outputFormatter.dateStyle = .short
-            return outputFormatter.string(from: date)
-        }
-        return dateString
-    }
 }
-

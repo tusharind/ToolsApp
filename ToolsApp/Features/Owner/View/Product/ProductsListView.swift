@@ -98,7 +98,7 @@ struct ProductsListView: View {
                     } else {
                         List(viewModel.products) { product in
                             NavigationLink {
-                                ProductDetailView(product: product, viewModel: viewModel)
+                               ProductDetailView(product: product, viewModel: viewModel)
                             } label: {
                                 ProductRow(product: product)
                                     .padding(.vertical, 4)

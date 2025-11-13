@@ -6,12 +6,19 @@ final class EmployeeListViewModel: ObservableObject {
     @Published var employees: [Employee] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String? = nil
-    @Published var searchText: String = ""
+
+    @Published var searchText: String = "" {
+        didSet { validateSearchText() }
+    }
+
     @Published var selectedRole: Role = .worker
     @Published var selectedFactoryId: Int? = nil
 
     @Published var factories: [Factory] = []
-    @Published var factorySearchText: String = ""
+    
+    @Published var factorySearchText: String = "" {
+        didSet { validateFactorySearchText() }
+    }
 
     enum Role: String, CaseIterable {
         case worker = "WORKER"
@@ -32,12 +39,35 @@ final class EmployeeListViewModel: ObservableObject {
         }
     }
 
+    private func validateSearchText() {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = trimmed.replacingOccurrences(
+            of: #"[^A-Za-z0-9\s@._-]"#,
+            with: "",
+            options: .regularExpression
+        )
+        if cleaned != searchText {
+            searchText = cleaned
+        }
+    }
+
+    private func validateFactorySearchText() {
+        let trimmed = factorySearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = trimmed.replacingOccurrences(
+            of: #"[^A-Za-z0-9\s@._-]"#,
+            with: "",
+            options: .regularExpression
+        )
+        if cleaned != factorySearchText {
+            factorySearchText = cleaned
+        }
+    }
+
     func fetchEmployees() async {
         isLoading = true
         errorMessage = nil
 
-        var path =
-            "/manager/employees?search=\(searchText)&role=\(selectedRole.rawValue)"
+        var path = "/manager/employees?search=\(searchText)&role=\(selectedRole.rawValue)"
         if let factoryId = selectedFactoryId {
             path += "&factoryId=\(factoryId)"
         }
@@ -51,8 +81,7 @@ final class EmployeeListViewModel: ObservableObject {
             )
             employees = response.data.employees
         } catch {
-            errorMessage =
-                "Failed to load employees: \(error.localizedDescription)"
+            errorMessage = "Failed to load employees: \(error.localizedDescription)"
             employees = []
         }
 
@@ -85,3 +114,4 @@ final class EmployeeListViewModel: ObservableObject {
         }
     }
 }
+

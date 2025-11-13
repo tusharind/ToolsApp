@@ -1,36 +1,34 @@
-
+import Foundation
 import SwiftUI
-import UIKit
 
 struct ImagePicker: UIViewControllerRepresentable {
-    @Environment(\.presentationMode) private var presentationMode
     @Binding var selectedImage: UIImage?
-    
+    @Environment(\.presentationMode) var presentationMode
     var sourceType: UIImagePickerController.SourceType = .photoLibrary
     
-    func makeUIViewController(context: Context) -> UIImagePickerController {
+    func makeUIViewController(context: Context) -> some UIViewController {
         let picker = UIImagePickerController()
         picker.sourceType = sourceType
         picker.delegate = context.coordinator
-        picker.allowsEditing = true
         return picker
     }
     
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(parent: self)
     }
     
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         let parent: ImagePicker
-        init(_ parent: ImagePicker) { self.parent = parent }
+        
+        init(parent: ImagePicker) {
+            self.parent = parent
+        }
         
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let edited = info[.editedImage] as? UIImage {
-                parent.selectedImage = edited
-            } else if let original = info[.originalImage] as? UIImage {
-                parent.selectedImage = original
+            if let image = info[.originalImage] as? UIImage {
+                parent.selectedImage = image
             }
             parent.presentationMode.wrappedValue.dismiss()
         }

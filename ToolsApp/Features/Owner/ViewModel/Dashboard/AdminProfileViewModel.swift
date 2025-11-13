@@ -9,7 +9,6 @@ final class AdminProfileViewModel: ObservableObject {
 
     private let client = APIClient.shared
 
-    // MARK: - Fetch Profile
     func fetchProfile() async {
         isLoading = true
         errorMessage = nil
@@ -39,8 +38,7 @@ final class AdminProfileViewModel: ObservableObject {
 
         isLoading = false
     }
-
-    // MARK: - Update Profile Image
+    
     func updateProfileImage(with newUrl: String) async {
         guard var profile = profile else { return }
         isUpdatingImage = true

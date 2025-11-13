@@ -10,7 +10,15 @@ final class FactoryViewModel: ObservableObject {
 
     @Published var currentPage = 0
     @Published var totalPages = 1
-    @Published var searchText: String = ""
+
+    @Published var searchText: String = "" {
+        didSet {
+            if searchText.hasPrefix(" ") {
+                searchText = searchText.trimmingCharacters(in: .whitespaces)
+            }
+        }
+    }
+
     @Published var selectedCity: String? = nil
     @Published var sortBy: SortBy = .createdAt
     @Published var sortDirection: SortDirection = .descending
@@ -18,7 +26,14 @@ final class FactoryViewModel: ObservableObject {
     @Published var availableManagers: [Manager] = []
     @Published var isLoadingManagers = false
     @Published var managersErrorMessage: String?
-    @Published var managerSearchText: String = ""
+
+    @Published var managerSearchText: String = "" {
+        didSet {
+            if managerSearchText.hasPrefix(" ") {
+                managerSearchText = managerSearchText.trimmingCharacters(in: .whitespaces)
+            }
+        }
+    }
 
     private var cancellables = Set<AnyCancellable>()
     private let client = APIClient.shared
@@ -29,7 +44,7 @@ final class FactoryViewModel: ObservableObject {
             .removeDuplicates()
             .debounce(for: .seconds(1.6), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                Task { await self?.fetchFactories(page: 0) }
+                Task { await self?.handleFactorySearch() }
             }
             .store(in: &cancellables)
 
@@ -51,9 +66,17 @@ final class FactoryViewModel: ObservableObject {
             .removeDuplicates()
             .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
             .sink { [weak self] query in
-                Task { await self?.searchManagers(query: query) }
+                Task { await self?.handleManagerSearch(query: query) }
             }
             .store(in: &cancellables)
+    }
+
+    private func handleFactorySearch() async {
+        guard searchText.count >= 2 || searchText.isEmpty else {
+            errorMessage = "Enter at least 2 characters to search factories."
+            return
+        }
+        await fetchFactories(page: 0)
     }
 
     func fetchFactories(page: Int = 0, size: Int = 10) async {
@@ -87,10 +110,7 @@ final class FactoryViewModel: ObservableObject {
 
         let request = APIRequest(
             path: path,
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
+            method: .GET
         )
 
         do {
@@ -123,8 +143,6 @@ final class FactoryViewModel: ObservableObject {
         let request = APIRequest(
             path: "/owner/createFactory",
             method: .POST,
-            parameters: nil,
-            headers: nil,
             body: factoryRequest
         )
         do {
@@ -153,10 +171,7 @@ final class FactoryViewModel: ObservableObject {
 
         let request = APIRequest(
             path: "/owner/factory/\(id)/toggle-status",
-            method: .PUT,
-            parameters: nil,
-            headers: nil,
-            body: nil
+            method: .PUT
         )
 
         do {
@@ -183,18 +198,20 @@ final class FactoryViewModel: ObservableObject {
         }
     }
 
+    private func handleManagerSearch(query: String) async {
+        guard query.count >= 2 || query.isEmpty else {
+            managersErrorMessage = "Enter at least 2 characters to search managers."
+            return
+        }
+        await searchManagers(query: query)
+    }
+
     func fetchAvailableManagers() async {
         guard !isLoadingManagers else { return }
         isLoadingManagers = true
         managersErrorMessage = nil
 
-        let request = APIRequest(
-            path: "/owner/managers/",
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
-        )
+        let request = APIRequest(path: "/owner/managers/", method: .GET)
         do {
             let response = try await client.send(
                 request,
@@ -223,15 +240,10 @@ final class FactoryViewModel: ObservableObject {
         isLoadingManagers = true
         managersErrorMessage = nil
 
-        let path =
-            "/owner/managers/?search/\(query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")"
-        let request = APIRequest(
-            path: path,
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
-        )
+        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        let path = "/owner/managers/?search/\(encoded)"
+
+        let request = APIRequest(path: path, method: .GET)
 
         do {
             let response = try await client.send(
@@ -252,3 +264,4 @@ final class FactoryViewModel: ObservableObject {
         isLoadingManagers = false
     }
 }
+

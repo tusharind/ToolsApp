@@ -25,7 +25,7 @@ struct CategoriesListView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 
                 // MARK: - Search Bar
                 TextField("Search categories", text: $viewModel.searchText)
@@ -33,6 +33,7 @@ struct CategoriesListView: View {
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(10)
                     .padding(.horizontal)
+                    .padding(.vertical, 8)
                 
                 // MARK: - Content
                 if isInitialLoading {
@@ -61,7 +62,7 @@ struct CategoriesListView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showAddCategory = true }) {
                         Image(systemName: "plus")
-                            .font(.title2)
+                            .font(.title3)
                     }
                 }
             }
@@ -77,10 +78,9 @@ struct CategoriesListView: View {
     // MARK: - Categories Scroll List
     var categoriesListContent: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 12) {
                 ForEach(filteredCategories) { category in
                     CategoryRowView(category: category)
-                        .frame(maxWidth: .infinity)
                         .onAppear {
                             if category == viewModel.categories.last {
                                 Task { await viewModel.fetchCategories() }
@@ -94,7 +94,7 @@ struct CategoriesListView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.vertical, 4)
+            .padding(.vertical, 8)
         }
     }
 }
@@ -103,42 +103,36 @@ struct CategoriesListView: View {
 struct CategoryRowView: View {
     let category: CategoryName
     
-    private var backgroundColor: Color {
-        let colors: [Color] = [
-            Color(red: 0.95, green: 0.97, blue: 1.0),
-            Color(red: 0.97, green: 0.95, blue: 1.0),
-            Color(red: 0.95, green: 1.0, blue: 0.95),
-            Color(red: 1.0, green: 0.96, blue: 0.95)
-        ]
-        let index = abs(category.id.hashValue) % colors.count
-        return colors[index]
-    }
-    
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(category.categoryName)
                 .font(.headline)
                 .foregroundColor(.primary)
-                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-             let description = category.description
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
+            Text(category.description)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-            Text("Products: \(category.productCount)")
-                .font(.footnote)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.leading)
+            HStack {
+                Image(systemName: "cube.box")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Text("Products: \(category.productCount)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                Spacer()
+            }
         }
         .padding()
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(backgroundColor)
+                .fill(Color(.systemBackground))
+                .strokeBorder(Color(.separator), lineWidth: 0.5)
         )
-        .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
     }
 }
-

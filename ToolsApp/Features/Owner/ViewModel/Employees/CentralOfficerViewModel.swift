@@ -7,10 +7,30 @@ final class CentralOfficerViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    @Published var searchText: String = ""
+    @Published var searchText: String = "" {
+        didSet {
+            validateSearchText()
+        }
+    }
+
     @Published var selectedRole: String? = nil
 
     private let client = APIClient.shared
+
+    private func validateSearchText() {
+
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let cleaned = trimmed.replacingOccurrences(
+            of: #"[^A-Za-z0-9\s@._-]"#,
+            with: "",
+            options: .regularExpression
+        )
+        
+        if cleaned != searchText {
+            searchText = cleaned
+        }
+    }
 
     func fetchOffices() async {
         isLoading = true
@@ -103,3 +123,4 @@ final class CentralOfficerViewModel: ObservableObject {
         }
     }
 }
+

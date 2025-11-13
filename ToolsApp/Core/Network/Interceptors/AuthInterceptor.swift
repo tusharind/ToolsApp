@@ -6,7 +6,6 @@ final class AuthInterceptor {
     private init() {}
 
     func intercept(_ request: inout URLRequest) {
-        // Directly get the current token from AppState singleton
         if let token = AppState.shared.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }

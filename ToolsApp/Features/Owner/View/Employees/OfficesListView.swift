@@ -19,7 +19,7 @@ struct CentralOfficesView: View {
                         ForEach(viewModel.offices) { office in
                             
                             VStack(spacing: 12) {
-                                // MARK: - Office Header
+      
                                 HStack {
                                     Text(office.name ?? office.location)
                                         .font(.headline)
@@ -29,7 +29,6 @@ struct CentralOfficesView: View {
                                 }
                                 .padding(.horizontal)
                                 
-                                // MARK: - Search + Add
                                 HStack(spacing: 12) {
                                     TextField("Search officer", text: $viewModel.searchText)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -47,7 +46,6 @@ struct CentralOfficesView: View {
                                 }
                                 .padding(.horizontal)
                                 
-                                // MARK: - Officer Cards
                                 let filtered = office.officers.filter { officer in
                                     viewModel.searchText.isEmpty ||
                                     officer.username.lowercased().contains(viewModel.searchText.lowercased()) ||
@@ -57,7 +55,7 @@ struct CentralOfficesView: View {
                                 
                                 ForEach(filtered) { officer in
                                     HStack(alignment: .top, spacing: 12) {
-                                        // Profile Image
+                             
                                         if let imgUrl = officer.img, let url = URL(string: imgUrl) {
                                             AsyncImage(url: url) { phase in
                                                 switch phase {
@@ -88,7 +86,6 @@ struct CentralOfficesView: View {
                                                 .foregroundColor(.gray)
                                         }
                                         
-                                        // Officer Info
                                         VStack(alignment: .leading, spacing: 4) {
                                             HStack {
                                                 Text(officer.username)
@@ -153,7 +150,6 @@ struct CentralOfficesView: View {
         }
     }
     
-    // MARK: - Helper
     func statusColor(_ status: String) -> Color {
         switch status.lowercased() {
         case "active": return .green

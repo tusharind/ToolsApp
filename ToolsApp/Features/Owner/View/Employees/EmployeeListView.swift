@@ -8,7 +8,6 @@ struct EmployeeListView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     
-                    // MARK: - Factory Scrollable Buttons
                     VStack(alignment: .leading, spacing: 8) {
                         TextField("Search factories", text: $viewModel.factorySearchText)
                             .padding(10)
@@ -45,7 +44,6 @@ struct EmployeeListView: View {
                     .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
                     .padding(.horizontal)
                     
-                    // MARK: - Role Picker
                     Picker("Role", selection: $viewModel.selectedRole) {
                         ForEach(EmployeeListViewModel.Role.allCases, id: \.self) { role in
                             Text(role.displayName).tag(role)
@@ -57,7 +55,6 @@ struct EmployeeListView: View {
                         Task { await viewModel.fetchEmployees() }
                     }
                     
-                    // MARK: - Employee Search
                     TextField("Search employees", text: $viewModel.searchText)
                         .padding(10)
                         .background(Color(.systemGray6))
@@ -67,7 +64,6 @@ struct EmployeeListView: View {
                             Task { await viewModel.fetchEmployees() }
                         }
                     
-                    // MARK: - Employee List
                     if viewModel.isLoading {
                         Spacer()
                         ProgressView("Loading employees...")
@@ -104,7 +100,6 @@ struct EmployeeListView: View {
     }
 }
 
-// MARK: - Factory Button Subview
 struct FactoryButton: View {
     let title: String
     let isSelected: Bool
@@ -149,7 +144,6 @@ struct EmployeeRow: View {
                     .frame(width: 50, height: 50)
             }
             
-            // Employee Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(employee.username)
                     .font(.headline)

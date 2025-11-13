@@ -15,15 +15,13 @@ struct LoginView: View {
             VStack(spacing: 24) {
                 Spacer(minLength: 60)
 
-                VStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Welcome Back")
                         .font(.largeTitle.bold())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
                     Text("Sign in to continue")
                         .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(spacing: 16) {
 
@@ -88,6 +86,12 @@ struct LoginView: View {
                     }
                     .padding(.horizontal)
                     .transition(.opacity.combined(with: .move(edge: .top)))
+                    .offset(x: viewModel.shake)
+                    .onChange(of: viewModel.errorMessage) { _ in
+                        withAnimation(.default) {
+                            viewModel.shakeAnimation()
+                        }
+                    }
                 }
 
                 Button(action: {
@@ -119,4 +123,5 @@ struct LoginView: View {
             .navigationBarHidden(true)
         }
     }
+
 }

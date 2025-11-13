@@ -38,4 +38,18 @@ struct FactoryEmployee: Codable {
     let location: String
 }
 
+struct EmployeesResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: EmployeesData?
+    let pagination: Pagination?
+    let timestamp: String?
+}
+
+struct EmployeesData: Codable {
+    let employees: [Employee]
+    let totalCount: Int
+    let factoryId: Int
+    let factoryName: String
+}
 
