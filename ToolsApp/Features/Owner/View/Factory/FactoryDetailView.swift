@@ -17,7 +17,6 @@ struct FactoryDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                // MARK: - Factory Info
                 VStack(alignment: .leading, spacing: 8) {
                     Text(factory.name)
                         .font(.title2.bold())
@@ -44,7 +43,6 @@ struct FactoryDetailView: View {
                 .background(Color(.secondarySystemBackground))
                 .cornerRadius(12)
 
-                // MARK: - Plant Head Info
                 if let head = factory.plantHead {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Plant Head").font(.headline)
@@ -69,7 +67,6 @@ struct FactoryDetailView: View {
                         .cornerRadius(12)
                 }
 
-                // MARK: - Toggle Button
                 Button {
                     showConfirmation = true
                 } label: {
@@ -128,7 +125,6 @@ struct FactoryDetailView: View {
         }
     }
 
-    // MARK: - Action
     private func toggleStatus() async {
         isProcessing = true
         let success = await viewModel.toggleFactoryStatus(id: factory.factoryId)

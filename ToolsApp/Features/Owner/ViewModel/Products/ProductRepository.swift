@@ -82,16 +82,16 @@ final class ProductRepository {
     }
     
     func uploadImage(productId: Int, imageData: Data, fileName: String) async throws -> Product {
-
+        
         let boundary = UUID().uuidString
         var body = Data()
-
+        
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"imageFile\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
         body.append(imageData)
         body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
-
+        
         let request = APIRequest(
             path: "/owner/uploadImage/\(productId)",
             method: .POST,
@@ -99,9 +99,9 @@ final class ProductRepository {
             headers: ["Content-Type": "multipart/form-data; boundary=\(boundary)"],
             body: body
         )
-
+        
         let response = try await client.send(request, responseType: APIResponse<Product>.self)
-
+        
         guard let product = response.data else {
             throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: response.message])
         }
@@ -109,15 +109,15 @@ final class ProductRepository {
     }
     
     func searchCategories(query: String) async throws -> [Category] {
-            let urlString = "/product/categories/search?search=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
-            let request = APIRequest(path: urlString, method: .GET)
-            let response = try await APIClient.shared.send(
-                request,
-                responseType: APIResponse<[Category]>.self
-            )
-            return response.data ?? []
-        }
-
+        let urlString = "/product/categories/search?search=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let request = APIRequest(path: urlString, method: .GET)
+        let response = try await APIClient.shared.send(
+            request,
+            responseType: APIResponse<[Category]>.self
+        )
+        return response.data ?? []
+    }
+    
     
 }
 

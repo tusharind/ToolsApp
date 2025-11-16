@@ -3,18 +3,20 @@ import SwiftUI
 @MainActor
 final class ManagersViewModel: ObservableObject {
     @Published var managers: [Manager] = []
+    @Published var availableManagers: [Manager] = []
+    @Published var factoryManagers: [Manager] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-
+    
     @Published var currentPage = 0
     @Published var totalPages = 1
-
+    
     @Published var searchText: String = "" {
         didSet { validateSearchText() }
     }
-
+    
     private let client = APIClient.shared
-
+    
     private func validateSearchText() {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleaned = trimmed.replacingOccurrences(
@@ -28,10 +30,24 @@ final class ManagersViewModel: ObservableObject {
     }
 
     func createManager(username: String, email: String, phone: String) async {
+        let trimmedUsername = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Prevent empty or invalid values
+        guard !trimmedUsername.isEmpty else {
+            errorMessage = "Username cannot be empty"
+            return
+        }
+        guard !trimmedEmail.isEmpty else {
+            errorMessage = "Email cannot be empty"
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
-
-        let body = ["username": username, "email": email, "phone": phone]
+        
+        let body = ["username": trimmedUsername, "email": trimmedEmail, "phone": trimmedPhone]
         let request = APIRequest(
             path: "/owner/managers/create",
             method: .POST,
@@ -39,7 +55,7 @@ final class ManagersViewModel: ObservableObject {
             headers: nil,
             body: body
         )
-
+        
         do {
             let response: ManagerCreationResponse = try await client.send(
                 request,
@@ -51,16 +67,17 @@ final class ManagersViewModel: ObservableObject {
         }
         isLoading = false
     }
-
+    
     func fetchManagers(page: Int = 0, size: Int = 20) async {
         isLoading = true
         errorMessage = nil
-
+        
         var query = "?page=\(page)&size=\(size)"
-        if !searchText.isEmpty {
-            query += "&search=\(searchText)"
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedSearchText.isEmpty {
+            query += "&search=\(trimmedSearchText)"
         }
-
+        
         let request = APIRequest(
             path: "/owner/managers/\(query)",
             method: .GET,
@@ -68,13 +85,46 @@ final class ManagersViewModel: ObservableObject {
             headers: nil,
             body: nil
         )
-
+        
         do {
             let response: PaginatedManagersResponse = try await client.send(
                 request,
                 responseType: PaginatedManagersResponse.self
             )
             managers = response.data?.content ?? []
+            totalPages = response.data?.totalPages ?? 1
+            currentPage = page
+            factoryManagers = managers.filter({$0.factoryId != nil})
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+    
+    func fetchAvailableManagers(page: Int = 0, size: Int = 20) async {
+        isLoading = true
+        errorMessage = nil
+        
+        var query = "?page=\(page)&size=\(size)"
+        let trimmedSearchText = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedSearchText.isEmpty {
+            query += "&search=\(trimmedSearchText)"
+        }
+        
+        let request = APIRequest(
+            path: "/owner/managers/available",
+            method: .GET,
+            parameters: nil,
+            headers: nil,
+            body: nil
+        )
+        
+        do {
+            let response: PaginatedManagersResponse = try await client.send(
+                request,
+                responseType: PaginatedManagersResponse.self
+            )
+            availableManagers = response.data?.content ?? []
             totalPages = response.data?.totalPages ?? 1
             currentPage = page
         } catch {
@@ -91,7 +141,7 @@ final class ManagersViewModel: ObservableObject {
         default: return .blue
         }
     }
-
+    
     func formattedDate(_ dateString: String) -> String {
         let formatter = ISO8601DateFormatter()
         if let date = formatter.date(from: dateString) {

@@ -2,5 +2,5 @@ import Foundation
 
 struct LoginResponse: Decodable {
     let token: String
-    let role: String
+    let role: UserRole
 }

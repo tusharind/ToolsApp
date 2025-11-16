@@ -26,8 +26,7 @@ struct CategoriesListView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                
-                // MARK: - Search Bar
+
                 TextField("Search categories", text: $viewModel.searchText)
                     .padding(10)
                     .background(Color(.secondarySystemBackground))
@@ -35,7 +34,6 @@ struct CategoriesListView: View {
                     .padding(.horizontal)
                     .padding(.vertical, 8)
                 
-                // MARK: - Content
                 if isInitialLoading {
                     Spacer()
                     ProgressView("Loading categories...")
@@ -75,7 +73,6 @@ struct CategoriesListView: View {
         }
     }
     
-    // MARK: - Categories Scroll List
     var categoriesListContent: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
@@ -99,7 +96,6 @@ struct CategoriesListView: View {
     }
 }
 
-// MARK: - Category Card
 struct CategoryRowView: View {
     let category: CategoryName
     

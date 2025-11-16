@@ -63,11 +63,17 @@ final class EmployeeListViewModel: ObservableObject {
         }
     }
 
+    private func sanitizedInput(_ input: String) -> String {
+        input.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     func fetchEmployees() async {
         isLoading = true
         errorMessage = nil
 
-        var path = "/manager/employees?search=\(searchText)&role=\(selectedRole.rawValue)"
+        let trimmedSearchText = sanitizedInput(searchText)
+
+        var path = "/manager/employees?search=\(trimmedSearchText)&role=\(selectedRole.rawValue)"
         if let factoryId = selectedFactoryId {
             path += "&factoryId=\(factoryId)"
         }
@@ -108,9 +114,10 @@ final class EmployeeListViewModel: ObservableObject {
     }
 
     var filteredFactories: [Factory] {
-        if factorySearchText.isEmpty { return factories }
+        let trimmedSearch = sanitizedInput(factorySearchText)
+        if trimmedSearch.isEmpty { return factories }
         return factories.filter {
-            $0.name.lowercased().contains(factorySearchText.lowercased())
+            $0.name.lowercased().contains(trimmedSearch.lowercased())
         }
     }
 }

@@ -67,11 +67,9 @@ final class LoginViewModel: ObservableObject {
             )
 
             print("Login Response: \(response)")
-            if let role = UserRole(rawValue: response.role.lowercased()) {
-                appState.setUserSession(token: response.token, role: role)
-            } else {
-                errorMessage = "Unknown user role: \(response.role)"
-            }
+
+            appState.setUserSession(token: response.token, role: response.role)
+
         } catch {
             errorMessage = error.localizedDescription
         }

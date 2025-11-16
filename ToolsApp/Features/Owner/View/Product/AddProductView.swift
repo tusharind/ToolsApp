@@ -118,7 +118,6 @@ struct AddProductView: View {
     }
 }
 
-// Helper to dismiss keyboard
 #if canImport(UIKit)
 extension View {
     func hideKeyboard() {
@@ -126,4 +125,3 @@ extension View {
     }
 }
 #endif
-

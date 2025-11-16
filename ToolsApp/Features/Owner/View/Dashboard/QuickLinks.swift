@@ -37,15 +37,15 @@ var quickLinksSection: some View {
             )
 
             QuickLinkCard(
-                title: "Product Categories",
+                title: "Products/Categories",
                 systemImage: "paperclip",
-                destination: CategoriesListView()
+                destination: ProductsAndCategoriesView()
             )
 
             QuickLinkCard(
                 title: "Managers",
                 systemImage: "books.vertical.circle.fill",
-                destination: ManagersView()
+                destination: FactoryManagerView()
             )
         }
         .padding(.horizontal)

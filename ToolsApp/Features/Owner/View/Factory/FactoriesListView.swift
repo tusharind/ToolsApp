@@ -7,7 +7,7 @@ struct FactoriesListView: View {
 
     var body: some View {
         VStack {
-            // MARK: - Filters
+  
             VStack(spacing: 8) {
                 TextField(
                     "Search factories, cities, or addresses",
@@ -16,13 +16,6 @@ struct FactoriesListView: View {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding(.horizontal)
 
-                TextField("City", text: $cityFilter)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal)
-                    .onChange(of: cityFilter) { newValue,oldValue in
-                        viewModel.selectedCity =
-                            newValue.isEmpty ? nil : newValue
-                    }
             }
 
             Divider()

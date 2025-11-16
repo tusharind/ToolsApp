@@ -87,7 +87,7 @@ struct LoginView: View {
                     .padding(.horizontal)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                     .offset(x: viewModel.shake)
-                    .onChange(of: viewModel.errorMessage) { _ in
+                    .onChange(of: viewModel.errorMessage) { oldValue, newValue in
                         withAnimation(.default) {
                             viewModel.shakeAnimation()
                         }

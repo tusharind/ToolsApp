@@ -18,7 +18,6 @@ final class CentralOfficerViewModel: ObservableObject {
     private let client = APIClient.shared
 
     private func validateSearchText() {
-
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         
         let cleaned = trimmed.replacingOccurrences(
@@ -30,6 +29,10 @@ final class CentralOfficerViewModel: ObservableObject {
         if cleaned != searchText {
             searchText = cleaned
         }
+    }
+
+    private func sanitizedInput(_ input: String) -> String {
+        input.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func fetchOffices() async {
@@ -74,7 +77,21 @@ final class CentralOfficerViewModel: ObservableObject {
         email: String,
         phone: String?
     ) async {
-        guard canAddOfficer(email: email) else {
+        let sanitizedName = sanitizedInput(name)
+        let sanitizedEmail = sanitizedInput(email)
+
+        
+        guard !sanitizedName.isEmpty else {
+            self.errorMessage = "Officer name cannot be empty or only spaces."
+            return
+        }
+
+        guard !sanitizedEmail.isEmpty else {
+            self.errorMessage = "Officer email cannot be empty or only spaces."
+            return
+        }
+
+        guard canAddOfficer(email: sanitizedEmail) else {
             self.errorMessage = "This officer is already assigned to an office"
             return
         }
@@ -84,8 +101,8 @@ final class CentralOfficerViewModel: ObservableObject {
 
         let body = AddOfficerRequest(
             centralOfficeId: officeId,
-            centralOfficerName: name,
-            centralOfficerEmail: email,
+            centralOfficerName: sanitizedName,
+            centralOfficerEmail: sanitizedEmail,
             phone: phone
         )
 
@@ -116,9 +133,10 @@ final class CentralOfficerViewModel: ObservableObject {
     }
 
     func filteredOfficers(for office: CentralOffice) -> [CentralOfficer] {
-        office.officers.filter { officer in
-            (searchText.isEmpty
-                || officer.username.localizedCaseInsensitiveContains(searchText))
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return office.officers.filter { officer in
+            (trimmedSearch.isEmpty
+                || officer.username.localizedCaseInsensitiveContains(trimmedSearch))
                 && (selectedRole == nil || officer.role == selectedRole)
         }
     }

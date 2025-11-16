@@ -4,11 +4,11 @@ struct AddFactoryView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FactoryViewModel
 
-    @State private var name: String = ""
-    @State private var city: String = ""
-    @State private var address: String = ""
+    @State private var name = ""
+    @State private var city = ""
+    @State private var address = ""
     @State private var selectedManagerId: Int? = nil
-    @State private var managerSearchText: String = ""
+    @State private var managerSearchText = ""
 
     @State private var isSubmitting = false
     @State private var showAlert = false
@@ -19,57 +19,75 @@ struct AddFactoryView: View {
             Form {
 
                 Section("Factory Details") {
-                    TextField("Factory Name", text: $name)
-                    TextField("City", text: $city)
-                    TextField("Address", text: $address)
+                    TextField(
+                        "Factory Name",
+                        text: $name,
+                        prompt: Text("e.g. Alpha Plant")
+                    )
+                    .autocapitalization(.words)
+
+                    TextField(
+                        "City",
+                        text: $city,
+                        prompt: Text("e.g. San Francisco")
+                    )
+                    .autocapitalization(.words)
+
+                    TextField(
+                        "Address",
+                        text: $address,
+                        prompt: Text("123 Industrial Rd")
+                    )
+                    .autocapitalization(.sentences)
                 }
 
                 Section("Assign Manager") {
                     if viewModel.isLoadingManagers {
-                        ProgressView("Loading managers...")
+                        HStack {
+                            ProgressView()
+                            Text("Loading managers...")
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     } else if let error = viewModel.managersErrorMessage {
-                        VStack(alignment: .leading) {
-                            Text(error).foregroundColor(.red)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label(
+                                error,
+                                systemImage: "exclamationmark.triangle"
+                            )
+                            .foregroundColor(.red)
+                            .font(.caption)
+
                             Button("Retry") {
                                 Task {
                                     await viewModel.fetchAvailableManagers()
                                 }
                             }
+                            .font(.caption)
+                            .buttonStyle(.bordered)
                         }
                     } else {
 
                         TextField("Search manager...", text: $managerSearchText)
                             .textFieldStyle(.roundedBorder)
-                            .onChange(of: managerSearchText) { newValue,oldValue in
+                            .disableAutocorrection(true)
+                            .onChange(of: managerSearchText) { _, newValue in
                                 Task {
-
                                     await viewModel.searchManagers(
                                         query: newValue
                                     )
-
                                 }
                             }
 
                         if viewModel.availableManagers.isEmpty {
-                            Text("No managers found.").foregroundColor(.gray)
+                            Text("No managers found")
+                                .foregroundColor(.secondary)
+                                .italic()
                         } else {
-                            ScrollView {
-                                ForEach(viewModel.availableManagers) {
-                                    manager in
-                                    HStack {
-                                        Text(manager.username)
-                                        Spacer()
-                                        if selectedManagerId == manager.id {
-                                            Image(systemName: "checkmark")
-                                                .foregroundColor(.blue)
-                                        }
-                                    }
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        selectedManagerId = manager.id
-                                    }
-                                }
-                            }
+                            ManagerSelectionList(
+                                managers: viewModel.availableManagers,
+                                selectedId: $selectedManagerId
+                            )
                         }
                     }
                 }
@@ -78,22 +96,35 @@ struct AddFactoryView: View {
                     Button {
                         Task { await createFactory() }
                     } label: {
-                        if isSubmitting {
-                            ProgressView().frame(maxWidth: .infinity)
-                        } else {
-                            Text("Create Factory").frame(maxWidth: .infinity)
+                        HStack {
+                            if isSubmitting {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                            } else {
+                                Image(systemName: "checkmark.circle.fill")
+                            }
+                            Text(
+                                isSubmitting ? "Creating..." : "Create Factory"
+                            )
+                            .fontWeight(.medium)
                         }
+                        .frame(maxWidth: .infinity)
                     }
-                    .disabled(
-                        isSubmitting || name.isEmpty || city.isEmpty
-                            || address.isEmpty || selectedManagerId == nil
+                    .disabled(isSubmitting || !isFormValid)
+                    .listRowBackground(
+                        isFormValid
+                            ? Color.accentColor : Color.gray.opacity(0.3)
                     )
+                    .foregroundColor(.white)
+                    .animation(.easeInOut, value: isFormValid)
                 }
             }
             .navigationTitle("Add Factory")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundColor(.blue)
                 }
             }
             .alert("Result", isPresented: $showAlert) {
@@ -105,6 +136,13 @@ struct AddFactoryView: View {
                 await viewModel.fetchAvailableManagers()
             }
         }
+    }
+
+    private var isFormValid: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty
+            && !city.trimmingCharacters(in: .whitespaces).isEmpty
+            && !address.trimmingCharacters(in: .whitespaces).isEmpty
+            && selectedManagerId != nil
     }
 
     private func createFactory() async {
@@ -127,8 +165,42 @@ struct AddFactoryView: View {
         let success = await viewModel.createFactory(request)
         alertMessage =
             success
-            ? "Factory created successfully!" : "Failed to create factory."
+            ? "Factory created successfully!"
+            : "Failed to create factory. Please try again."
         showAlert = true
+    }
+}
+
+private struct ManagerSelectionList: View {
+    let managers: [Manager]
+    @Binding var selectedId: Int?
+
+    var body: some View {
+        List(managers, selection: $selectedId) { manager in
+            HStack {
+                Text("\(manager.username) id:\(manager.id)")
+
+                    .font(.body)
+
+                Spacer()
+
+                if selectedId == manager.id {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.blue)
+                        .transition(.opacity)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.snappy) {
+                    selectedId = manager.id
+                }
+            }
+        }
+        .listStyle(.plain)
+        .frame(minHeight: 200)
+        .animation(.default, value: selectedId)
     }
 }
 

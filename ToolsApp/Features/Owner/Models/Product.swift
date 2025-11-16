@@ -68,7 +68,7 @@ struct UploadProductImageResponse: Codable {
     let timestamp: String?
 }
 
-struct Category: Identifiable, Codable {
+struct Category: Identifiable, Codable, Hashable {
     let id: Int
     let categoryName: String
     let description: String?
