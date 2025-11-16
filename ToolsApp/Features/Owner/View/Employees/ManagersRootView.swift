@@ -5,16 +5,17 @@ struct FactoryManagerView: View {
         TabView {
 
             ManagersView()
-                .navigationTitle("Products")
+                .navigationTitle("Managers")
 
                 .tabItem {
-                    Label("Products", systemImage: "cube.box.fill")
+                    Label("Assigned", systemImage: "list.bullet.rectangle.portrait")
                 }
 
             AvailableManagersView()
                 .tabItem {
-                    Label("Categories", systemImage: "square.grid.2x2.fill")
+                    Label("Available", systemImage: "text.page.badge.magnifyingglass")
                 }
         }
     }
 }
+

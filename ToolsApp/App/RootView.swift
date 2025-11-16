@@ -10,7 +10,7 @@ struct RootView: View {
                 case .owner:
                    OwnerDashboardView()
                 case .chiefOfficer:
-                    ManagerHomeView()
+                   OfficerDashboardView()
                 case .manager:
                     ManagerHomeView()
                 case .chiefSupervisor:
