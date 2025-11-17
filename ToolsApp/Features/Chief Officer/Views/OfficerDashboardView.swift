@@ -23,6 +23,11 @@ struct OfficerDashboardView: View {
                                 systemImage: "text.page",
                                 destination: RestockRequestsListView()
                             )
+                            QuickLinkCard(
+                                title: "Inventory",
+                                systemImage: "truck.box.fill",
+                                destination: CentralInventoryView()
+                            )
 
                             .padding(.horizontal)
                         }

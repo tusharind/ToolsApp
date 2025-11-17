@@ -66,8 +66,8 @@ struct ManagerHomeView: View {
                             .font(.headline)
                             .padding(.horizontal)
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
+                    
+                            VStack {
                                 QuickLinkCard(
                                     title: "Manage Employees",
                                     systemImage: "person.3.fill",
@@ -78,11 +78,16 @@ struct ManagerHomeView: View {
                                     systemImage: "shippingbox.fill",
                                     destination: PendingRestockRequestsView()
                                 )
+                                QuickLinkCard(
+                                    title: "Stock Up",
+                                    systemImage: "arrow.up.bin",
+                                    destination: StockProductionView()
+                                )
 
                             }
                             .padding(.horizontal)
-                        }
-                        .frame(height: 120)
+                        
+                     
                     }
                     .padding(.top, 10)
                 }
