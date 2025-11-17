@@ -1,6 +1,26 @@
 Factory Management App (Owner Flow)
 
-A SwiftUI-based iOS application for managing factories, employees, products, and related entities. Currently, only the Owner flow is fully implemented.
+A SwiftUI-based iOS application for managing factories, employees, products, and related entities. 
+
+Credentials:
+
+CHIEF OFFICE
+{
+   "email": "Chinmay@gmail.com",
+   "password": "default123"
+}
+
+MANAGER
+{
+    "email": "anny.manager@factory.com",
+    "password": "ANN@7823878"
+}
+
+ADMIN
+{
+     "email": "owner@gmail.com",     
+     "password": "12345"
+}
 
 Features (Owner Flow)
 Employees
