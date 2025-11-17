@@ -23,4 +23,32 @@ struct EmployeeFactory: Codable, Hashable {
     let location: String
 }
 
+struct ManagerPendingRequestData: Decodable {
+    let content: [ManagerPendingRequest]
+    let pageable: Pageable?
+    let totalElements: Int?
+    let totalPages: Int?
+    let last: Bool?
+    let size: Int?
+    let number: Int?
+    let sort: Sort?
+    let numberOfElements: Int?
+    let first: Bool?
+    let empty: Bool?
+}
+
+struct ManagerPendingRequest: Identifiable, Decodable {
+    let id: Int
+    let factoryId: Int
+    let factoryName: String
+    let productId: Int
+    let productName: String
+    let qtyRequested: Int
+    let status: String
+    let createdAt: String
+    let requestedByUserId: Int?
+    let requestedByUserName: String?
+    let completedAt: String?
+    let currentFactoryStock: Int
+}
 

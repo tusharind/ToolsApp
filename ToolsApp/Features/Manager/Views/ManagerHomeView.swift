@@ -2,7 +2,6 @@ import SwiftUI
 
 struct ManagerHomeView: View {
     @StateObject private var viewModel = ManagerHomeViewModel()
-    @State private var showManageEmployees = false
 
     var body: some View {
         NavigationStack {
@@ -62,21 +61,30 @@ struct ManagerHomeView: View {
                         .cornerRadius(16)
                     }
 
-                    Button {
-                        showManageEmployees = true
-                    } label: {
-                        Label("Manage Employees", systemImage: "person.3.fill")
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Quick Links")
                             .font(.headline)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .padding(.horizontal)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                QuickLinkCard(
+                                    title: "Manage Employees",
+                                    systemImage: "person.3.fill",
+                                    destination: ManageEmployeesView()
+                                )
+                                QuickLinkCard(
+                                    title: "Pending Requests",
+                                    systemImage: "shippingbox.fill",
+                                    destination: PendingRestockRequestsView()
+                                )
+
+                            }
+                            .padding(.horizontal)
+                        }
+                        .frame(height: 120)
                     }
                     .padding(.top, 10)
-                    .navigationDestination(isPresented: $showManageEmployees) {
-                        ManageEmployeesView()
-                    }
                 }
                 .padding()
             }

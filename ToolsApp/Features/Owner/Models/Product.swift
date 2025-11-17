@@ -43,7 +43,7 @@ struct ProductPageData: Decodable {
     let empty: Bool
 }
 
-struct Pageable: Codable {
+struct Pageable: Codable,Equatable {
     let pageNumber: Int
     let pageSize: Int
 }

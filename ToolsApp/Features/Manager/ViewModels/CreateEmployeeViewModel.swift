@@ -15,10 +15,8 @@ final class CreateEmployeeViewModel: ObservableObject {
 
     let roles = ["MANAGER", "CHIEF_SUPERVISOR", "WORKER"]
 
-    // MARK: - Input Validation
     private func validateInputs() -> Bool {
 
-        // Username no digits, not empty
         if username.trimmingCharacters(in: .whitespaces).isEmpty {
             errorMessage = "Username cannot be empty."
             return false
@@ -28,20 +26,17 @@ final class CreateEmployeeViewModel: ObservableObject {
             return false
         }
 
-        // Email validation
         if !isValidEmail(email) {
             errorMessage = "Please enter a valid email address."
             return false
         }
 
-        // Phone = digits only + optionally length
         if !isValidPhone(phone) {
             errorMessage =
                 "Phone number must contain only digits and be at least 8 digits long."
             return false
         }
 
-        // Bay ID must not be nil
         if bayId == nil {
             errorMessage = "Please select a Bay ID."
             return false
@@ -64,7 +59,6 @@ final class CreateEmployeeViewModel: ObservableObject {
         return digitsOnly && phone.count >= 8
     }
 
-    // MARK: - Create Employee API Call
     func createEmployee() async {
         guard validateInputs() else { return }
 

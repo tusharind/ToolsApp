@@ -49,7 +49,7 @@ struct ManagerSearchData: Codable {
     let empty: Bool
 }
 
-struct SortInfo: Codable {
+struct SortInfo: Codable, Equatable {
     let unsorted: Bool
     let empty: Bool
     let sorted: Bool

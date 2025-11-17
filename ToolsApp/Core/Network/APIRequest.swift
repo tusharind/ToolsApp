@@ -18,12 +18,23 @@ struct APIRequest {
     }
     
     func buildURLRequest(with config: NetworkConfig) throws -> URLRequest {
+        
+        var urlComponents = URLComponents(string: config.baseURL + path)
+        
         guard let url = URL(string: config.baseURL + path) else {
             throw NetworkError.invalidURL
         }
+        
+        if method == .GET, let parameters = parameters {
+                urlComponents?.queryItems = parameters.map { key, value in
+                    URLQueryItem(name: key, value: "\(value)")
+                }
+            }
+        
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.allHTTPHeaderFields = headers ?? [:]
+        
         if let customContentType = contentType {
             request.setValue(customContentType, forHTTPHeaderField: "Content-Type")
         } else {

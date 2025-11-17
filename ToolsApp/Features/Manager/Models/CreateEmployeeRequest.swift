@@ -13,3 +13,14 @@ struct GenericResponse: Codable {
     let message: String
 }
 
+struct RestockRequestsResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: RestockRequestsData
+    let pagination:Pagination?
+    let timestamp: String?
+}
+
+struct RestockRequestsData: Codable {
+    let content: [RestockRequest]
+}

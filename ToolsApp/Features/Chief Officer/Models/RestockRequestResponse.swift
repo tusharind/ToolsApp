@@ -8,7 +8,7 @@ struct RestockRequestResponse: Decodable {
     let timestamp: String?
 }
 
-struct RestockRequest: Decodable, Identifiable {
+struct RestockRequest: Codable, Identifiable {
     let id: Int
     let factoryId: Int
     let factoryName: String
