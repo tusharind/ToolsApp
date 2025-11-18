@@ -3,14 +3,14 @@ import SwiftUI
 
 struct Product: Identifiable, Codable {
     let id: Int
-    let name: String
-    let image: String?
-    let prodDescription: String
-    let price: Double
-    let rewardPts: Int
-    let status: String
-    let categoryId: Int
-    let categoryName: String
+    var name: String
+    var image: String?
+    var prodDescription: String
+    var price: Double
+    var rewardPts: Int
+    var status: String
+    var categoryId: Int
+    var categoryName: String
     let createdAt: String
     let updatedAt: String
 }

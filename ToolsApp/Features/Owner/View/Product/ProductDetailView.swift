@@ -3,6 +3,9 @@ import SwiftUI
 struct ProductDetailView: View {
     @ObservedObject var viewModel: ProductsViewModel
     @State private var product: Product
+    @State private var isShowingEditSheet = false
+    @State private var showDeleteAlert = false
+    @Environment(\.dismiss) private var dismiss
 
     init(product: Product, viewModel: ProductsViewModel) {
         _product = State(initialValue: product)
@@ -11,14 +14,54 @@ struct ProductDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                productImageView
-                uploadButton
-                productBasicInfo
-                productDescription
-                productAdditionalInfo
+            VStack(spacing: 20) {
+
+                // MARK: IMAGE + ICON
+                ZStack(alignment: .bottomTrailing) {
+                    productImageView
+
+                    Button {
+                        if viewModel.selectedImage == nil {
+                            viewModel.isShowingImagePicker = true
+                        } else {
+                            Task {
+                                await viewModel.uploadImage(for: product.id)
+                            }
+                        }
+                    } label: {
+                        Image(
+                            systemName: viewModel.selectedImage == nil
+                                ? "pencil" : "square.and.arrow.up"
+                        )
+                        .font(.system(size: 17, weight: .semibold))
+                        .padding(8)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
+                        .shadow(radius: 2)
+                    }
+                    .padding(8)
+                }
+
+                if let message = viewModel.uploadMessage {
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(spacing: 18) {
+                    productBasicInfo
+                    productDescription
+                    productAdditionalInfo
+                }
+
+                VStack(spacing: 12) {
+                    editButton
+                    deleteButton
+                }
             }
-            .padding()
+            .padding(.horizontal)
+            .padding(.top, 12)
+            .padding(.bottom, 30)
         }
         .navigationTitle("Product Details")
         .navigationBarTitleDisplayMode(.inline)
@@ -28,148 +71,171 @@ struct ProductDetailView: View {
                 sourceType: .photoLibrary
             )
         }
+        .sheet(isPresented: $isShowingEditSheet) {
+            EditProductView(product: product, viewModel: viewModel) {
+                updatedProduct in
+                self.product = updatedProduct
+                isShowingEditSheet = false
+            }
+        }
     }
 
     private var productImageView: some View {
-        Group {
+        ZStack {
             if let image = viewModel.selectedImage {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 160, height: 160)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .shadow(radius: 2)
             } else if let urlString = product.image,
                 let url = URL(string: urlString)
             {
                 AsyncImage(url: url) { phase in
                     switch phase {
-                    case .empty: ProgressView().frame(width: 160, height: 160)
+                    case .empty:
+                        ProgressView()
                     case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 160, height: 160)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        image.resizable().scaledToFill()
                     case .failure:
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 160, height: 160)
-                            .foregroundColor(.gray)
-                    @unknown default: EmptyView()
+                        placeholderImage
+                    @unknown default:
+                        placeholderImage
                     }
                 }
             } else {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray.opacity(0.1))
-                        .frame(width: 160, height: 160)
-                    Image(systemName: "photo.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.gray)
-                }
+                placeholderImage
             }
         }
-        .onTapGesture { viewModel.isShowingImagePicker = true }
+        .frame(width: 160, height: 160)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.08), radius: 3, x: 0, y: 2)
     }
 
-    private var uploadButton: some View {
-        Button {
-            if viewModel.selectedImage == nil {
-
-                viewModel.isShowingImagePicker = true
-            } else {
-
-                Task { await viewModel.uploadImage(for: product.id) }
-
-            }
-        } label: {
-            HStack {
-                if viewModel.isUploading { ProgressView() }
-                Text(
-                    viewModel.selectedImage == nil
-                        ? "Select Image" : "Upload Image"
-                ).bold()
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-        }
-        .disabled(viewModel.isUploading)
-        .overlay(
-            Group {
-                if let message = viewModel.uploadMessage {
-                    Text(message)
-                        .foregroundColor(.secondary)
-                        .font(.callout)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 4)
-                }
-            },
-            alignment: .bottom
-        )
+    private var placeholderImage: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(Color.gray.opacity(0.08))
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 38))
+                    .foregroundColor(.gray.opacity(0.5))
+            )
+            .frame(width: 160, height: 160)
     }
 
     private var productBasicInfo: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(product.name).font(.title).bold()
-            Text(product.categoryName).font(.subheadline).foregroundColor(
-                .secondary
-            )
+            Text(product.name)
+                .font(.title3.weight(.semibold))
+
+            Text(product.categoryName)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
             HStack {
                 Text("₹\(product.price, specifier: "%.2f")")
                     .font(.headline)
                     .foregroundColor(.blue)
+
                 Spacer()
+
                 Text("\(product.rewardPts) pts")
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.medium))
                     .foregroundColor(.orange)
-                    .padding(6)
-                    .background(Color.orange.opacity(0.2))
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(Color.orange.opacity(0.18))
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             }
         }
+        .frame(maxWidth: .infinity)
         .cardStyle()
     }
 
     private var productDescription: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Description").font(.headline)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Description")
+                .font(.headline)
+
             Text(product.prodDescription)
                 .font(.body)
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity)
         .cardStyle()
     }
 
     private var productAdditionalInfo: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Additional Info").font(.headline)
-            HStack {
-                Text("Status:").bold()
-                Text(product.status.capitalized).foregroundColor(
-                    product.status.lowercased() == "active" ? .green : .red
-                )
-            }
-            HStack {
-                Text("Created At:").bold()
-                Text(product.createdAt.formattedDate()).foregroundColor(
-                    .secondary
-                )
-            }
-            HStack {
-                Text("Updated At:").bold()
-                Text(product.updatedAt.formattedDate()).foregroundColor(
-                    .secondary
-                )
-            }
-            HStack {
-                Text("Category ID:").bold()
-                Text("\(product.categoryId)").foregroundColor(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Additional Info")
+                .font(.headline)
+
+            infoRow(
+                "Status:",
+                value: product.status.capitalized,
+                color: product.status.lowercased() == "active" ? .green : .red
+            )
+
+            infoRow("Created At:", value: product.createdAt.formattedDate())
+            infoRow("Updated At:", value: product.updatedAt.formattedDate())
+            infoRow("Category ID:", value: "\(product.categoryId)")
         }
+        .frame(maxWidth: .infinity)
         .cardStyle()
+    }
+
+    private func infoRow(_ title: String, value: String, color: Color? = nil)
+        -> some View
+    {
+        HStack {
+            Text(title).bold()
+            Text(value)
+                .foregroundColor(color ?? .secondary)
+        }
+    }
+
+    private var editButton: some View {
+        Button {
+            isShowingEditSheet = true
+        } label: {
+            HStack {
+                Image(systemName: "pencil")
+                Text("Edit Product").bold()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+    }
+
+    private var deleteButton: some View {
+        let isInactive = product.status.lowercased() == "inactive"
+
+        return Button(role: .destructive) {
+            showDeleteAlert = true
+        } label: {
+            HStack {
+                Image(systemName: "trash")
+                Text("Delete Product").bold()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(isInactive ? Color.gray : Color.red)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+            .opacity(isInactive ? 0.55 : 1)
+        }
+        .disabled(isInactive)
+        .alert("Delete Product?", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteProduct(id: product.id)
+                    dismiss()
+                }
+            }
+        } message: {
+            Text("Are you sure you want to delete this product?")
+        }
     }
 }

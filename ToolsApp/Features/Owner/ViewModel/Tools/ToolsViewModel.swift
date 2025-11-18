@@ -135,5 +135,29 @@ final class ToolsViewModel: ObservableObject {
         self.categoryId = id
         fetchTools(reset: true)
     }
+    
+    func fetchToolById(_ id: Int) async -> ToolItem? {
+        do {
+            let request = APIRequest(
+                path: "/tools/\(id)",
+                method: .GET,
+                parameters: nil,
+                headers: nil
+            )
+
+            let response: APIResponse<ToolItem> =
+                try await APIClient.shared.send(
+                    request,
+                    responseType: APIResponse<ToolItem>.self
+                )
+
+            return response.data
+
+        } catch {
+            self.errorMessage = error.localizedDescription
+            return nil
+        }
+    }
+
 }
 

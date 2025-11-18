@@ -3,7 +3,7 @@ import SwiftUI
 struct CentralOfficesView: View {
     @StateObject private var viewModel = CentralOfficerViewModel()
     @State private var showAddOfficerForOffice: CentralOffice?
-    
+
     var body: some View {
         VStack {
             if viewModel.isLoading {
@@ -17,9 +17,9 @@ struct CentralOfficesView: View {
                 ScrollView {
                     LazyVStack(spacing: 16) {
                         ForEach(viewModel.offices) { office in
-                            
+
                             VStack(spacing: 12) {
-      
+
                                 HStack {
                                     Text(office.name ?? office.location)
                                         .font(.headline)
@@ -28,12 +28,17 @@ struct CentralOfficesView: View {
                                         .foregroundColor(.gray)
                                 }
                                 .padding(.horizontal)
-                                
+
                                 HStack(spacing: 12) {
-                                    TextField("Search officer", text: $viewModel.searchText)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .padding(.leading, 8)
-                                    
+                                    TextField(
+                                        "Search officer",
+                                        text: $viewModel.searchText
+                                    )
+                                    .textFieldStyle(
+                                        RoundedBorderTextFieldStyle()
+                                    )
+                                    .padding(.leading, 8)
+
                                     Button {
                                         showAddOfficerForOffice = office
                                     } label: {
@@ -45,70 +50,91 @@ struct CentralOfficesView: View {
                                     }
                                 }
                                 .padding(.horizontal)
-                                
-                                let filtered = office.officers.filter { officer in
-                                    viewModel.searchText.isEmpty ||
-                                    officer.username.lowercased().contains(viewModel.searchText.lowercased()) ||
-                                    officer.email.lowercased().contains(viewModel.searchText.lowercased()) ||
-                                    (officer.phone?.contains(viewModel.searchText) ?? false)
+
+                                let filtered = office.officers.filter {
+                                    officer in
+                                    viewModel.searchText.isEmpty
+                                        || officer.username.lowercased()
+                                            .contains(
+                                                viewModel.searchText
+                                                    .lowercased()
+                                            )
+                                        || officer.email.lowercased().contains(
+                                            viewModel.searchText.lowercased()
+                                        )
+                                        || (officer.phone?.contains(
+                                            viewModel.searchText
+                                        ) ?? false)
                                 }
-                                
+
                                 ForEach(filtered) { officer in
                                     HStack(alignment: .top, spacing: 12) {
-                             
-                                        if let imgUrl = officer.img, let url = URL(string: imgUrl) {
+
+                                        if let imgUrl = officer.img,
+                                            let url = URL(string: imgUrl)
+                                        {
                                             AsyncImage(url: url) { phase in
                                                 switch phase {
                                                 case .empty:
                                                     ProgressView()
-                                                        .frame(width: 60, height: 60)
+                                                        .frame(
+                                                            width: 60,
+                                                            height: 60
+                                                        )
                                                 case .success(let image):
                                                     image
                                                         .resizable()
                                                         .scaledToFill()
-                                                        .frame(width: 60, height: 60)
+                                                        .frame(
+                                                            width: 60,
+                                                            height: 60
+                                                        )
                                                         .clipShape(Circle())
                                                 case .failure:
-                                                    Image(systemName: "person.crop.circle.fill")
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 60, height: 60)
-                                                        .foregroundColor(.gray)
+                                                    Image(
+                                                        systemName:
+                                                            "person.crop.circle.fill"
+                                                    )
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(
+                                                        width: 60,
+                                                        height: 60
+                                                    )
+                                                    .foregroundColor(.gray)
                                                 @unknown default:
                                                     EmptyView()
                                                 }
                                             }
                                         } else {
-                                            Image(systemName: "person.crop.circle.fill")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 60, height: 60)
-                                                .foregroundColor(.gray)
+                                            Image(
+                                                systemName:
+                                                    "person.crop.circle.fill"
+                                            )
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 60, height: 60)
+                                            .foregroundColor(.gray)
                                         }
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
+
+                                        VStack(alignment: .leading, spacing: 4)
+                                        {
                                             HStack {
                                                 Text(officer.username)
                                                     .font(.headline)
                                                     .lineLimit(1)
                                                     .truncationMode(.tail)
-                                                
+
                                                 Spacer()
-                                                
-                                                Text(officer.role)
-                                                    .font(.caption)
-                                                    .padding(4)
-                                                    .background(Color.blue.opacity(0.2))
-                                                    .foregroundColor(.blue)
-                                                    .cornerRadius(6)
+
                                             }
-                                            
+
                                             Text(officer.email)
                                                 .font(.subheadline)
                                                 .foregroundColor(.gray)
                                                 .lineLimit(1)
                                                 .truncationMode(.tail)
-                                            
+
                                             if let phone = officer.phone {
                                                 Text(phone)
                                                     .font(.subheadline)
@@ -116,12 +142,17 @@ struct CentralOfficesView: View {
                                                     .lineLimit(1)
                                                     .truncationMode(.tail)
                                             }
-                                            
+
                                             Text("Status: \(officer.status)")
                                                 .font(.caption2)
-                                                .foregroundColor(statusColor(officer.status))
+                                                .foregroundColor(
+                                                    statusColor(officer.status)
+                                                )
                                                 .padding(4)
-                                                .background(statusColor(officer.status).opacity(0.2))
+                                                .background(
+                                                    statusColor(officer.status)
+                                                        .opacity(0.2)
+                                                )
                                                 .cornerRadius(4)
                                         }
                                         Spacer()
@@ -129,9 +160,16 @@ struct CentralOfficesView: View {
                                     .padding()
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 140)
-                                    .background(Color(.secondarySystemBackground))
+                                    .background(
+                                        Color(.secondarySystemBackground)
+                                    )
                                     .cornerRadius(12)
-                                    .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: 2)
+                                    .shadow(
+                                        color: Color.black.opacity(0.05),
+                                        radius: 3,
+                                        x: 0,
+                                        y: 2
+                                    )
                                     .padding(.horizontal)
                                 }
                             }
@@ -141,7 +179,7 @@ struct CentralOfficesView: View {
                 }
             }
         }
-        .navigationTitle("Central Offices")
+        .navigationTitle("Central Officers")
         .sheet(item: $showAddOfficerForOffice) { office in
             AddOfficerView(office: office, viewModel: viewModel)
         }
@@ -149,7 +187,7 @@ struct CentralOfficesView: View {
             await viewModel.fetchOffices()
         }
     }
-    
+
     func statusColor(_ status: String) -> Color {
         switch status.lowercased() {
         case "active": return .green
@@ -159,4 +197,3 @@ struct CentralOfficesView: View {
         }
     }
 }
-

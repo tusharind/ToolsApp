@@ -1,7 +1,5 @@
 import SwiftUI
 
-
-
 struct FactoryDetailView: View {
     let factory: Factory
     @ObservedObject var viewModel: FactoryViewModel
@@ -129,9 +127,9 @@ struct FactoryDetailView: View {
 
         alertMessage = AlertMessage(
             message: success
-                ? (viewModel.errorMessage ?? "Factory status toggled successfully")
+                ? (viewModel.errorMessage
+                    ?? "Factory status toggled successfully")
                 : (viewModel.errorMessage ?? "Failed to toggle factory status")
         )
     }
 }
-

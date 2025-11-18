@@ -36,9 +36,9 @@ var quickLinksSection: some View {
             )
 
             QuickLinkCard(
-                title: "Products/Categories",
+                title: "Categories",
                 systemImage: "paperclip",
-                destination: ProductsAndCategoriesView()
+                destination: ToolCategoriesListView()
             )
 
             QuickLinkCard(

@@ -88,9 +88,6 @@ struct OwnerDashboardView: View {
             }
         }
     }
-
-   
-
 }
 
 #Preview {

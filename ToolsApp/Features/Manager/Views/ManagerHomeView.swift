@@ -41,7 +41,11 @@ struct ManagerHomeView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color(.secondarySystemBackground))
-                                .shadow(color: .black.opacity(0.08), radius: 4, y: 2)
+                                .shadow(
+                                    color: .black.opacity(0.08),
+                                    radius: 4,
+                                    y: 2
+                                )
                         )
                     } else {
                         VStack {
@@ -78,7 +82,11 @@ struct ManagerHomeView: View {
                         .background(
                             RoundedRectangle(cornerRadius: 16)
                                 .fill(Color.blue.opacity(0.08))
-                                .shadow(color: .black.opacity(0.05), radius: 3, y: 1)
+                                .shadow(
+                                    color: .black.opacity(0.05),
+                                    radius: 3,
+                                    y: 1
+                                )
                         )
                     }
 
@@ -87,42 +95,54 @@ struct ManagerHomeView: View {
                             .font(.headline)
                             .padding(.horizontal)
 
-                        VStack {
-                            QuickLinkCard(
-                                title: "Manage Employees",
-                                systemImage: "person.3.fill",
-                                destination: ManageEmployeesView()
-                            )
-                            QuickLinkCard(
-                                title: "Pending Requests",
-                                systemImage: "shippingbox.fill",
-                                destination: PendingRestockRequestsView()
-                            )
-                            QuickLinkCard(
-                                title: "Stock Up",
-                                systemImage: "arrow.up.bin",
-                                destination: StockProductionView()
-                            )
-                            QuickLinkCard(
-                                title: "My Factory Tools",
-                                systemImage: "hammer.fill",
-                                destination: ManagerFactoryToolsView()
-                            )
+                        VStack(spacing: 16) {
+                            HStack(spacing: 16) {
+                                QuickLinkCard(
+                                    title: "Manage Employees",
+                                    systemImage: "person.3.fill",
+                                    destination: ManageEmployeesView()
+                                )
+                                .frame(maxWidth: .infinity)
+
+                                QuickLinkCard(
+                                    title: "Pending Requests",
+                                    systemImage: "shippingbox.fill",
+                                    destination: PendingRestockRequestsView()
+                                )
+                                .frame(maxWidth: .infinity)
+                            }
+
+                            HStack(spacing: 16) {
+                                QuickLinkCard(
+                                    title: "Stock Up",
+                                    systemImage: "arrow.up.bin",
+                                    destination: StockProductionView()
+                                )
+                                .frame(maxWidth: .infinity)
+
+                                QuickLinkCard(
+                                    title: "My Factory Tools",
+                                    systemImage: "hammer.fill",
+                                    destination: ManagerFactoryToolsView()
+                                )
+                                .frame(maxWidth: .infinity)
+                            }
                         }
                         .padding(.horizontal)
                     }
                     .padding(.top, 10)
 
                 }
-                .padding()
+                .padding(.top, 10)
+
             }
-            .navigationTitle("Manager Dashboard")
-            .navigationBarTitleDisplayMode(.inline)
-            .task {
-                await viewModel.fetchFactoryDetails()
-                await viewModel.fetchMyFactoryEmployees()
-            }
+            .padding()
+        }
+        .navigationTitle("Manager Dashboard")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await viewModel.fetchFactoryDetails()
+            await viewModel.fetchMyFactoryEmployees()
         }
     }
 }
-
