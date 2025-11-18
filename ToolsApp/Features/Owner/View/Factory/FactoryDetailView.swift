@@ -1,9 +1,6 @@
 import SwiftUI
 
-struct AlertMessage: Identifiable {
-    let id = UUID()
-    let message: String
-}
+
 
 struct FactoryDetailView: View {
     let factory: Factory

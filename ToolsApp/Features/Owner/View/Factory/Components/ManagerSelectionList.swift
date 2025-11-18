@@ -1,6 +1,6 @@
 import SwiftUI
 
-private struct ManagerSelectionList: View {
+struct ManagerSelectionList: View {
     let managers: [Manager]
     @Binding var selectedId: Int?
 

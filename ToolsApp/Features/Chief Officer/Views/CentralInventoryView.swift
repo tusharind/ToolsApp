@@ -9,19 +9,6 @@ struct CentralInventoryView: View {
     @State private var sortBy: SortOption = .id
     @State private var searchText: String = ""
 
-    enum SortOption: String, CaseIterable, Identifiable {
-        case id, name, quantity, totalReceived
-        var id: String { self.rawValue }
-        var displayName: String {
-            switch self {
-            case .id: return "ID"
-            case .name: return "Name"
-            case .quantity: return "Quantity"
-            case .totalReceived: return "Total Received"
-            }
-        }
-    }
-
     var body: some View {
         NavigationStack {
             VStack {

@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum ResponseHandler {
-    static func decodeResponse<T: Decodable>(_ data: Data, responseType: T.Type) throws -> T {
+    static func decodeResponse<T: Decodable>(_ data: Data, responseType: T.Type)
+        throws -> T
+    {
         do {
             return try JSONDecoder.configured.decode(T.self, from: data)
         } catch {
             print("DECODING ERROR:", error)
-            
-            
 
             if let decodingError = error as? DecodingError {
                 switch decodingError {
@@ -32,4 +32,3 @@ enum ResponseHandler {
         }
     }
 }
-

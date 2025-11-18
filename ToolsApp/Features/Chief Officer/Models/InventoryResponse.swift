@@ -14,7 +14,7 @@ struct InventoryData: Decodable {
 }
 
 struct InventoryItem: Identifiable, Decodable {
-    let id = UUID() // For SwiftUI List
+    let id = UUID()
     let productId: Int
     let productName: String
     let quantity: Int

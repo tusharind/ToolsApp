@@ -8,7 +8,6 @@ struct ManagerHomeView: View {
             ScrollView {
                 VStack(spacing: 20) {
 
-                    // MARK: - Factory Card
                     if let factory = viewModel.factory {
                         VStack(alignment: .leading, spacing: 10) {
 
@@ -53,7 +52,6 @@ struct ManagerHomeView: View {
                         .padding(.top, 50)
                     }
 
-                    // MARK: - Plant Head Card
                     if let head = viewModel.factory?.plantHead {
                         VStack(alignment: .leading, spacing: 6) {
 
@@ -84,7 +82,6 @@ struct ManagerHomeView: View {
                         )
                     }
 
-                    // MARK: - Quick Links
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Quick Links")
                             .font(.headline)
@@ -105,6 +102,11 @@ struct ManagerHomeView: View {
                                 title: "Stock Up",
                                 systemImage: "arrow.up.bin",
                                 destination: StockProductionView()
+                            )
+                            QuickLinkCard(
+                                title: "My Factory Tools",
+                                systemImage: "hammer.fill",
+                                destination: ManagerFactoryToolsView()
                             )
                         }
                         .padding(.horizontal)

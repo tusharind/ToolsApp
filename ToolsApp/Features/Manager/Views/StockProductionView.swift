@@ -29,7 +29,7 @@ struct StockProductionView: View {
                     ScrollView {
                         LazyVStack(spacing: 10) {
                             ForEach(viewModel.products, id: \.id) { product in
-                                ProductRowSimple(
+                                ProductRowSection(
                                     product: product,
                                     isSelected: viewModel.selectedProduct?.id
                                         == product.id
@@ -88,7 +88,7 @@ struct StockProductionView: View {
     }
 }
 
-struct ProductRowSimple: View {
+struct ProductRowSection: View {
     let product: Product
     let isSelected: Bool
 

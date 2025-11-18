@@ -34,3 +34,41 @@ struct ErrorMessage: Identifiable {
     let text: String
 }
 
+struct AlertMessage: Identifiable {
+    let id = UUID()
+    let message: String
+}
+
+struct Tools: Identifiable, Decodable, Equatable {
+    let id: Int
+    let toolId: Int
+    let toolName: String
+    let toolCategory: String
+    let toolType: String
+    let isExpensive: String
+    let imageUrl: String
+    let totalQuantity: Int
+    let availableQuantity: Int
+    let issuedQuantity: Int
+    let lastUpdatedAt: String
+}
+
+struct FactoryToolsResponse: Decodable {
+    let success: Bool
+    let message: String
+    let data: FactoryToolsData
+}
+
+struct FactoryToolsData: Decodable {
+    let content: [Tools]
+    let pageable: Pageable
+    let last: Bool
+    let totalPages: Int
+    let totalElements: Int
+    let size: Int
+    let number: Int
+    let sort: Sort
+    let numberOfElements: Int
+    let first: Bool
+    let empty: Bool
+}
