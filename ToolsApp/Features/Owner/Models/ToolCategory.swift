@@ -35,3 +35,12 @@ struct CreateToolCategoryResponse: Codable {
     let message: String
     let data: ToolCategory
 }
+
+struct ToolCreationResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: ToolItem?
+    let pagination: Pagination?
+    let timestamp:String 
+}
+

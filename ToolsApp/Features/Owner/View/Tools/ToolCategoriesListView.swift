@@ -23,7 +23,7 @@ struct ToolCategoriesListView: View {
                     }
                     .listStyle(.plain)
                 }
-                
+
             }
             .navigationTitle("Tool Categories")
             .toolbar {

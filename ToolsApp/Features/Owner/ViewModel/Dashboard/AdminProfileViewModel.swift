@@ -40,7 +40,7 @@ final class AdminProfileViewModel: ObservableObject {
     }
     
     func updateProfileImage(with newUrl: String) async {
-        guard var profile = profile else { return }
+        //guard var profile = profile else { return }
         isUpdatingImage = true
         errorMessage = nil
 

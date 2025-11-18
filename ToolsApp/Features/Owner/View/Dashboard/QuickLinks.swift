@@ -7,7 +7,6 @@ var quickLinksSection: some View {
             .bold()
             .padding(.horizontal)
 
-        // Grid-like layout
         LazyVGrid(
             columns: [GridItem(.flexible()), GridItem(.flexible())],
             spacing: 16
@@ -47,7 +46,15 @@ var quickLinksSection: some View {
                 systemImage: "books.vertical.circle.fill",
                 destination: FactoryManagerView()
             )
+        
         }
+        .padding(.horizontal)
+        
+        QuickLinkCard(
+            title: "Tools",
+            systemImage: "hammer.fill",
+            destination: ToolsListView()
+        )
         .padding(.horizontal)
     }
     .padding(.vertical)
