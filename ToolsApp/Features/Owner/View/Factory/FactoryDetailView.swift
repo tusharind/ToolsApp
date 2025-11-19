@@ -5,6 +5,9 @@ struct FactoryDetailView: View {
     @ObservedObject var viewModel: FactoryViewModel
 
     @State private var showConfirmation = false
+    @State private var showManagerPicker = false
+    @State private var selectedManagerId: Int?
+    @State private var managerSearchText: String = ""
     @State private var isProcessing = false
     @State private var alertMessage: AlertMessage?
 
@@ -51,7 +54,6 @@ struct FactoryDetailView: View {
                         .font(.footnote)
                     }
                     .padding()
-                    .background(Color(.secondarySystemBackground))
                     .cornerRadius(12)
                 } else {
                     Text("No Plant Head assigned.")
@@ -61,6 +63,108 @@ struct FactoryDetailView: View {
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
                 }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Assign / Change Manager")
+                        .font(.headline)
+
+                    Button {
+                        Task {
+                            await viewModel.fetchAvailableManagers()
+                            selectedManagerId = factory.plantHead?.id
+                            withAnimation { showManagerPicker.toggle() }
+                        }
+                    } label: {
+                        HStack {
+                            Text(
+                                viewModel.availableManagers.first(where: {
+                                    $0.id == selectedManagerId
+                                })?.username ?? factory.plantHead?.username
+                                    ?? "Select Manager"
+                            )
+                            Spacer()
+                            Image(
+                                systemName: showManagerPicker
+                                    ? "chevron.up" : "chevron.down"
+                            )
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(12)
+                    }
+
+                    if showManagerPicker {
+                        VStack(spacing: 4) {
+                            TextField(
+                                "Search manager",
+                                text: $managerSearchText
+                            )
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .onChange(of: managerSearchText) { query in
+                                Task {
+                                    await viewModel.searchManagers(query: query)
+                                }
+                            }
+                            .padding(.horizontal)
+
+                            ScrollView {
+                                VStack(spacing: 0) {
+                                    ForEach(viewModel.availableManagers) {
+                                        manager in
+                                        HStack {
+                                            Text(
+                                                "\(manager.username) id:\(manager.id)"
+                                            )
+                                            .padding(.vertical, 8)
+                                            Spacer()
+                                            if selectedManagerId == manager.id {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundColor(.blue)
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            withAnimation {
+                                                selectedManagerId = manager.id
+                                            }
+                                        }
+                                        Divider()
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 200)
+                        }
+                        .padding(.vertical, 4)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.gray.opacity(0.2))
+                        )
+
+                        if let managerId = selectedManagerId {
+                            Button("Assign Manager") {
+                                Task {
+                                    await assignManager(managerId: managerId)
+                                }
+                                withAnimation { showManagerPicker = false }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                            .padding(.top, 4)
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(12)
 
                 Button {
                     showConfirmation = true
@@ -130,6 +234,21 @@ struct FactoryDetailView: View {
                 ? (viewModel.errorMessage
                     ?? "Factory status toggled successfully")
                 : (viewModel.errorMessage ?? "Failed to toggle factory status")
+        )
+    }
+
+    private func assignManager(managerId: Int) async {
+        isProcessing = true
+        let success = await viewModel.updateFactoryManager(
+            factoryId: factory.factoryId,
+            managerId: managerId
+        )
+        isProcessing = false
+
+        alertMessage = AlertMessage(
+            message: success
+                ? (viewModel.errorMessage ?? "Manager assigned successfully")
+                : (viewModel.errorMessage ?? "Failed to assign manager")
         )
     }
 }

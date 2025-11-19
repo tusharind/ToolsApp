@@ -3,14 +3,14 @@ import SwiftUI
 
 @MainActor
 final class FactoryViewModel: ObservableObject {
-    
+
     @Published var factories: [Factory] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
+
     @Published var currentPage = 0
     @Published var totalPages = 1
-    
+
     @Published var searchText: String = "" {
         didSet {
             if searchText.hasPrefix(" ") {
@@ -18,28 +18,29 @@ final class FactoryViewModel: ObservableObject {
             }
         }
     }
-    
+
     @Published var selectedCity: String? = nil
     @Published var sortBy: SortBy = .createdAt
     @Published var sortDirection: SortDirection = .descending
-    
+
     @Published var availableManagers: [Manager] = []
     @Published var isLoadingManagers = false
     @Published var managersErrorMessage: String?
-    
+
     @Published var managerSearchText: String = "" {
         didSet {
             if managerSearchText.hasPrefix(" ") {
-                managerSearchText = managerSearchText.trimmingCharacters(in: .whitespaces)
+                managerSearchText = managerSearchText.trimmingCharacters(
+                    in: .whitespaces
+                )
             }
         }
     }
-    
+
     private var cancellables = Set<AnyCancellable>()
     private let client = APIClient.shared
-    
+
     init() {
-        
         $searchText
             .removeDuplicates()
             .debounce(for: .seconds(1.6), scheduler: DispatchQueue.main)
@@ -47,7 +48,7 @@ final class FactoryViewModel: ObservableObject {
                 Task { await self?.handleFactorySearch() }
             }
             .store(in: &cancellables)
-        
+
         $selectedCity
             .removeDuplicates()
             .debounce(for: .seconds(1.6), scheduler: DispatchQueue.main)
@@ -55,13 +56,13 @@ final class FactoryViewModel: ObservableObject {
                 Task { await self?.fetchFactories(page: 0) }
             }
             .store(in: &cancellables)
-        
+
         Publishers.CombineLatest($sortBy, $sortDirection)
             .sink { [weak self] _, _ in
                 Task { await self?.fetchFactories(page: 0) }
             }
             .store(in: &cancellables)
-        
+
         $managerSearchText
             .removeDuplicates()
             .debounce(for: .milliseconds(500), scheduler: DispatchQueue.main)
@@ -70,7 +71,7 @@ final class FactoryViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     private func handleFactorySearch() async {
         guard searchText.count >= 2 || searchText.isEmpty else {
             errorMessage = "Enter at least 2 characters to search factories."
@@ -78,12 +79,12 @@ final class FactoryViewModel: ObservableObject {
         }
         await fetchFactories(page: 0)
     }
-    
+
     func fetchFactories(page: Int = 0, size: Int = 10) async {
         guard !isLoading else { return }
         isLoading = true
         errorMessage = nil
-        
+
         var queryItems: [URLQueryItem] = [
             URLQueryItem(name: "page", value: "\(page)"),
             URLQueryItem(name: "size", value: "\(size)"),
@@ -96,7 +97,7 @@ final class FactoryViewModel: ObservableObject {
         if let city = selectedCity {
             queryItems.append(URLQueryItem(name: "city", value: city))
         }
-        
+
         let queryString = queryItems.map { "\($0.name)=\($0.value ?? "")" }
             .joined(separator: "&")
         let path: String
@@ -107,12 +108,9 @@ final class FactoryViewModel: ObservableObject {
         } else {
             path = "/owner/factories?\(queryString)"
         }
-        
-        let request = APIRequest(
-            path: path,
-            method: .GET
-        )
-        
+
+        let request = APIRequest(path: path, method: .GET)
+
         do {
             let response = try await client.send(
                 request,
@@ -131,15 +129,15 @@ final class FactoryViewModel: ObservableObject {
             }
         } catch {
             self.errorMessage =
-            "Failed to load factories: \(error.localizedDescription)"
+                "Failed to load factories: \(error.localizedDescription)"
         }
         isLoading = false
     }
-    
+
     func createFactory(_ factoryRequest: CreateFactoryRequest) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
+
         let request = APIRequest(
             path: "/owner/createFactory",
             method: .POST,
@@ -159,27 +157,27 @@ final class FactoryViewModel: ObservableObject {
             }
         } catch {
             errorMessage =
-            "Failed to create factory: \(error.localizedDescription)"
+                "Failed to create factory: \(error.localizedDescription)"
         }
         isLoading = false
         return false
     }
-    
+
     func toggleFactoryStatus(id: Int) async -> Bool {
         isLoading = true
         errorMessage = nil
-        
+
         let request = APIRequest(
             path: "/owner/factory/\(id)/toggle-status",
             method: .PUT
         )
-        
+
         do {
             let response = try await client.send(
                 request,
                 responseType: ToggleResponse<EmptyResponse>.self
             )
-            
+
             if response.success {
                 await fetchFactories(page: 0)
                 isLoading = false
@@ -189,28 +187,29 @@ final class FactoryViewModel: ObservableObject {
                 isLoading = false
                 return false
             }
-            
+
         } catch {
             errorMessage =
-            "Failed to toggle factory status: \(error.localizedDescription)"
+                "Failed to toggle factory status: \(error.localizedDescription)"
             isLoading = false
             return false
         }
     }
-    
+
     private func handleManagerSearch(query: String) async {
         guard query.count >= 2 || query.isEmpty else {
-            managersErrorMessage = "Enter at least 2 characters to search managers."
+            managersErrorMessage =
+                "Enter at least 2 characters to search managers."
             return
         }
         await searchManagers(query: query)
     }
-    
+
     func fetchAvailableManagers() async {
         guard !isLoadingManagers else { return }
         isLoadingManagers = true
         managersErrorMessage = nil
-        
+
         let request = APIRequest(path: "/owner/managers/", method: .GET)
         do {
             let response = try await client.send(
@@ -226,25 +225,27 @@ final class FactoryViewModel: ObservableObject {
             }
         } catch {
             self.managersErrorMessage =
-            "Failed to load managers: \(error.localizedDescription)"
+                "Failed to load managers: \(error.localizedDescription)"
         }
         isLoadingManagers = false
     }
-    
+
     func searchManagers(query: String) async {
         guard !query.isEmpty else {
             await fetchAvailableManagers()
             return
         }
-        
+
         isLoadingManagers = true
         managersErrorMessage = nil
-        
-        let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+
+        let encoded =
+            query.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+            ?? ""
         let path = "/owner/managers/?search/\(encoded)"
-        
+
         let request = APIRequest(path: path, method: .GET)
-        
+
         do {
             let response = try await client.send(
                 request,
@@ -259,8 +260,43 @@ final class FactoryViewModel: ObservableObject {
             }
         } catch {
             self.managersErrorMessage =
-            "Failed to search managers: \(error.localizedDescription)"
+                "Failed to search managers: \(error.localizedDescription)"
         }
         isLoadingManagers = false
+    }
+
+    func updateFactoryManager(factoryId: Int, managerId: Int) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+
+        let request = APIRequest(
+            path: "/owner/factories/\(factoryId)/manager",
+            method: .PATCH,
+            body: ["managerId": managerId]
+        )
+
+        do {
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<EmptyResponse>.self
+            )
+
+            if response.success {
+                Task {
+                    await fetchFactories(page: 0)
+                }
+                isLoading = false
+                return true
+            } else {
+                errorMessage = response.message
+                isLoading = false
+                return false
+            }
+        } catch {
+            errorMessage =
+                "Failed to update manager: \(error.localizedDescription)"
+            isLoading = false
+            return false
+        }
     }
 }
