@@ -8,7 +8,7 @@ struct RootView: View {
             if appState.isAuthenticated {
                 switch appState.role {
                 case .owner:
-                   OwnerDashboardView()
+                   AdminRootContainerView()
                 case .chiefOfficer:
                    OfficerDashboardView()
                 case .manager:
