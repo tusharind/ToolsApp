@@ -158,6 +158,35 @@ final class ToolsViewModel: ObservableObject {
             return nil
         }
     }
+    
+    func deleteTool(_ id: Int) {
+        Task {
+            do {
+                let request = APIRequest(
+                    path: "/tools/\(id)",
+                    method: .DELETE,
+                    parameters: nil,
+                    headers: nil
+                )
+
+                let response: APIResponse<EmptyResponse> =
+                    try await APIClient.shared.send(
+                        request,
+                        responseType: APIResponse<EmptyResponse>.self
+                    )
+
+                await MainActor.run {
+                    tools.removeAll { $0.id == id }
+                }
+
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+
 
 }
 

@@ -7,7 +7,7 @@ struct ManagerSelectionList: View {
     var body: some View {
         List(managers, selection: $selectedId) { manager in
             HStack {
-                Text("\(manager.username) id:\(manager.id)")
+                Text("\(manager.username) id#\(manager.id)")
 
                     .font(.body)
 

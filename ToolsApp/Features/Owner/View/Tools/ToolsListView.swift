@@ -3,6 +3,7 @@ import SwiftUI
 struct ToolsListView: View {
     @StateObject private var viewModel = ToolsViewModel()
     @State private var showAddTool = false
+    @State private var confirmDelete: ToolItem? = nil
 
     var body: some View {
         NavigationStack {
@@ -41,14 +42,16 @@ struct ToolsListView: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.tools) { tool in
-                            ToolCardView(tool: tool)
-                                .onAppear {
-                                    if tool.id == viewModel.tools.last?.id
-                                        && !viewModel.isLoading
-                                    {
-                                        viewModel.fetchTools()
-                                    }
+                            ToolCardView(tool: tool) {
+                                confirmDelete = tool
+                            }
+                            .onAppear {
+                                if tool.id == viewModel.tools.last?.id
+                                    && !viewModel.isLoading
+                                {
+                                    viewModel.fetchTools()
                                 }
+                            }
                         }
 
                         if viewModel.isLoading {
@@ -87,6 +90,19 @@ struct ToolsListView: View {
                     dismissButton: .default(Text("OK"))
                 )
             }
+            // DELETE CONFIRMATION ALERT
+            .alert(item: $confirmDelete) { tool in
+                Alert(
+                    title: Text("Delete Tool"),
+                    message: Text(
+                        "Are you sure you want to delete \(tool.name)?"
+                    ),
+                    primaryButton: .destructive(Text("Delete")) {
+                        viewModel.deleteTool(tool.id)
+                    },
+                    secondaryButton: .cancel()
+                )
+            }
         }
     }
 
@@ -109,6 +125,7 @@ struct ToolsListView: View {
 
 struct ToolCardView: View {
     let tool: ToolItem
+    let onDelete: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -136,15 +153,31 @@ struct ToolCardView: View {
         .background(Color(.secondarySystemBackground))
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .overlay(alignment: .topTrailing) {
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .foregroundColor(.red)
+                    .padding(8)
+            }
+        }
     }
 }
 
 struct FlexibleBadgeView: View {
     let tool: ToolItem
 
+    var formattedType: String {
+        switch tool.type {
+        case "NOT_PERISHABLE":
+            return "Reusable"
+        default:
+            return tool.type.replacingOccurrences(of: "_", with: " ")
+        }
+    }
+
     var badges: [(String, Color)] {
         [
-            (tool.type, .purple.opacity(0.6)),
+            (formattedType, .purple.opacity(0.6)),
             (
                 "Threshold: \(tool.threshold)",
                 (tool.threshold < 20 ? Color.red : Color.green).opacity(0.6)

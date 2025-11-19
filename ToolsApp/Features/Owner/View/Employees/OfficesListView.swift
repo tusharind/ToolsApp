@@ -73,7 +73,6 @@ struct CentralOfficesView: View {
                                 ForEach(filtered) { officer in
                                     HStack(alignment: .top, spacing: 12) {
 
-                                        // Officer Image
                                         if let imgUrl = officer.img,
                                             let url = URL(string: imgUrl)
                                         {
@@ -120,7 +119,6 @@ struct CentralOfficesView: View {
                                             .foregroundColor(.gray)
                                         }
 
-                                        // Officer Info
                                         VStack(alignment: .leading, spacing: 4)
                                         {
                                             Text(officer.username)

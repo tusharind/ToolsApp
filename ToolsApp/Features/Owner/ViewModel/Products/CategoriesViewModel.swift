@@ -118,5 +118,41 @@ final class CategoriesViewModel: ObservableObject {
             return false
         }
     }
+    
+    func updateCategory(categoryId: Int, name: String, description: String) async -> Bool {
+        let sanitizedName = sanitizedCategoryName(name)
+        guard !sanitizedName.isEmpty else {
+            errorMessage = "Category name cannot be empty or only spaces."
+            return false
+        }
+
+        let body = ["categoryName": sanitizedName, "description": description]
+        let request = APIRequest(
+            path: "/product/categories/\(categoryId)",
+            method: .PUT,
+            headers: nil,
+            body: body
+        )
+
+        do {
+            let response: APIResponse<EmptyResponse> =
+            try await APIClient.shared.send(
+                request,
+                responseType: APIResponse<EmptyResponse>.self
+            )
+
+            if response.success {
+                await fetchCategories(reset: true)  
+                return true
+            } else {
+                errorMessage = response.message
+                return false
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
 }
 

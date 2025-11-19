@@ -9,6 +9,9 @@ struct ManagersView: View {
     @State private var phone = ""
     @State private var searchTask: Task<Void, Never>? = nil
 
+    @State private var showDeleteConfirm = false
+    @State private var managerToDelete: Manager? = nil
+
     @State private var usernameTouched = false
     @State private var emailTouched = false
     @State private var phoneTouched = false
@@ -27,6 +30,26 @@ struct ManagersView: View {
             }
             .navigationTitle("Managers")
             .navigationBarTitleDisplayMode(.inline)
+            .alert(
+                "Delete Manager?",
+                isPresented: $showDeleteConfirm,
+                actions: {
+                    Button("Cancel", role: .cancel) {}
+
+                    Button("Delete", role: .destructive) {
+                        Task {
+                            if let manager = managerToDelete {
+                                await viewModel.deleteManager(id: manager.id)
+                                await viewModel.fetchManagers()
+                            }
+                            managerToDelete = nil
+                        }
+                    }
+                },
+                message: {
+                    Text("Are you sure you want to delete this manager?")
+                }
+            )
         }
         .sheet(isPresented: $showingAddManager) {
             addManagerSheet
@@ -65,8 +88,14 @@ struct ManagersView: View {
             Spacer()
         } else {
             List(viewModel.factoryManagers) { manager in
-                ManagerCardView(manager: manager)
-                    .listRowSeparator(.hidden)
+                ManagerCardView(
+                    manager: manager,
+                    onDelete: {
+                        managerToDelete = manager
+                        showDeleteConfirm = true
+                    }
+                )
+                .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
         }
@@ -224,9 +253,12 @@ struct ValidatedTextField: View {
             TextField(title, text: $text)
                 .keyboardType(keyboard)
                 .textInputAutocapitalization(.never)
-                .onChange(of: text) { oldValue, inValue in touched = true }
+                .onChange(of: text) { _, _ in touched = true }
+
             if touched && !isValid {
-                Text(errorMessage).foregroundColor(.red).font(.caption)
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .font(.caption)
             }
         }
     }
@@ -238,20 +270,35 @@ struct ValidatedTextField: View {
 
 struct ManagerCardView: View {
     let manager: Manager
+    var onDelete: (() -> Void)? = nil
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            profileImage
-            managerInfo
-            Spacer()
+        ZStack(alignment: .topTrailing) {
+            HStack(alignment: .top, spacing: 12) {
+                profileImage
+                managerInfo
+                Spacer()
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .frame(height: 130)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
+            .padding(.horizontal)
+
+            if let onDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                        .padding(6)
+                }
+                .background(Color.white)
+                .clipShape(Circle())
+                .shadow(radius: 2)
+                .padding(8)
+            }
         }
-        .padding()
-        .frame(maxWidth: .infinity)
-        .frame(height: 130)
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
-        .padding(.horizontal)
     }
 
     private var profileImage: some View {

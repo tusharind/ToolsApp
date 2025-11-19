@@ -151,5 +151,43 @@ final class ManagersViewModel: ObservableObject {
         }
         return dateString
     }
+    
+    func deleteManager(id: Int) async {
+        let request = APIRequest(
+            path: "/owner/managers/\(id)",
+            method: .DELETE
+        )
+        
+        DispatchQueue.main.async {
+            self.isLoading = true
+            self.errorMessage = nil
+        }
+        
+        do {
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<EmptyData>.self
+            )
+            
+            if response.success {
+       
+                await fetchManagers()
+            } else {
+    
+                DispatchQueue.main.async {
+                    self.errorMessage = response.message
+                }
+            }
+        } catch {
+            DispatchQueue.main.async {
+                self.errorMessage = error.localizedDescription
+            }
+        }
+        
+        DispatchQueue.main.async {
+            self.isLoading = false
+        }
+    }
+
 }
 

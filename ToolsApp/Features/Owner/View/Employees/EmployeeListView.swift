@@ -181,11 +181,6 @@ struct EmployeeRow: View {
                     .foregroundColor(.secondary)
             }
 
-            Spacer()
-
-            Image(systemName: "ellipsis")
-                .rotationEffect(.degrees(90))
-                .foregroundColor(.gray)
         }
         .padding()
     }

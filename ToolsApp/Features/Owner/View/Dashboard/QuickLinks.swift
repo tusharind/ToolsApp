@@ -38,7 +38,7 @@ var quickLinksSection: some View {
             QuickLinkCard(
                 title: "Categories",
                 systemImage: "paperclip",
-                destination: ToolCategoriesListView()
+                destination: RootCategoryView()
             )
 
             QuickLinkCard(

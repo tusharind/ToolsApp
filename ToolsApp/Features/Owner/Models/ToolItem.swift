@@ -103,5 +103,12 @@ struct CategoryProductsCount: Identifiable, Codable {
     var id: Int { categoryId }
 }
 
+struct UpdateToolCategoryResponse: Decodable {
+    let success: Bool
+    let message: String
+    let data: ToolCategory
+}
+
+
 
 
