@@ -57,18 +57,18 @@ struct AdminProfileView: View {
                                     }
                                     .padding(.top, 20)
 
-                                    Button {
-                                        showingImageAlert = true
-                                        newImageUrl = profile.img ?? ""
-                                    } label: {
-                                        Image(systemName: "pencil.circle.fill")
-                                            .font(.title2)
-                                            .foregroundColor(.blue)
-                                            .background(
-                                                Color.white.clipShape(Circle())
-                                            )
-                                    }
-                                    .offset(x: 5, y: 5)
+//                                    Button {
+//                                        showingImageAlert = true
+//                                        newImageUrl = profile.img ?? ""
+//                                    } label: {
+//                                        Image(systemName: "pencil.circle.fill")
+//                                            .font(.title2)
+//                                            .foregroundColor(.blue)
+//                                            .background(
+//                                                Color.white.clipShape(Circle())
+//                                            )
+//                                    }
+//                                    .offset(x: 5, y: 5)
                                 }
 
                                 if viewModel.isUpdatingImage {

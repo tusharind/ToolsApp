@@ -43,6 +43,36 @@ final class CentralOfficerViewModel: ObservableObject {
             return filtered
         }
     }
+    
+    func deleteOfficer(officerId: Int) async {
+        isLoading = true
+        errorMessage = nil
+
+        let request = APIRequest(
+            path: "/owner/central-office/central-officer/\(officerId)",
+            method: .DELETE
+        )
+
+        do {
+            let response: APIResponse<CentralOfficer?> = try await client.send(
+                request,
+                responseType: APIResponse<CentralOfficer?>.self
+            )
+
+            if response.success {
+              
+                await fetchOffices()
+            } else {
+          
+                self.errorMessage = response.message
+            }
+        } catch {
+            self.errorMessage = error.localizedDescription
+        }
+
+        isLoading = false
+    }
+
 
     private func sanitizedInput(_ input: String) -> String {
         input.trimmingCharacters(in: .whitespacesAndNewlines)

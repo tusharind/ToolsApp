@@ -4,6 +4,9 @@ struct CentralOfficesView: View {
     @StateObject private var viewModel = CentralOfficerViewModel()
     @State private var showAddOfficerForOffice: CentralOffice?
 
+    @State private var officerToDelete: CentralOfficer?
+    @State private var showDeleteConfirmation = false
+
     var body: some View {
         VStack {
             if viewModel.isLoading {
@@ -70,6 +73,7 @@ struct CentralOfficesView: View {
                                 ForEach(filtered) { officer in
                                     HStack(alignment: .top, spacing: 12) {
 
+                                        // Officer Image
                                         if let imgUrl = officer.img,
                                             let url = URL(string: imgUrl)
                                         {
@@ -102,8 +106,7 @@ struct CentralOfficesView: View {
                                                         height: 60
                                                     )
                                                     .foregroundColor(.gray)
-                                                @unknown default:
-                                                    EmptyView()
+                                                @unknown default: EmptyView()
                                                 }
                                             }
                                         } else {
@@ -117,17 +120,13 @@ struct CentralOfficesView: View {
                                             .foregroundColor(.gray)
                                         }
 
+                                        // Officer Info
                                         VStack(alignment: .leading, spacing: 4)
                                         {
-                                            HStack {
-                                                Text(officer.username)
-                                                    .font(.headline)
-                                                    .lineLimit(1)
-                                                    .truncationMode(.tail)
-
-                                                Spacer()
-
-                                            }
+                                            Text(officer.username)
+                                                .font(.headline)
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
 
                                             Text(officer.email)
                                                 .font(.subheadline)
@@ -155,7 +154,18 @@ struct CentralOfficesView: View {
                                                 )
                                                 .cornerRadius(4)
                                         }
+
                                         Spacer()
+
+                                        Button {
+                                            officerToDelete = officer
+                                            showDeleteConfirmation = true
+                                        } label: {
+                                            Image(systemName: "trash")
+                                                .foregroundColor(.red)
+                                                .padding(8)
+                                        }
+                                        .buttonStyle(BorderlessButtonStyle())
                                     }
                                     .padding()
                                     .frame(maxWidth: .infinity)
@@ -182,6 +192,20 @@ struct CentralOfficesView: View {
         .navigationTitle("Central Officers")
         .sheet(item: $showAddOfficerForOffice) { office in
             AddOfficerView(office: office, viewModel: viewModel)
+        }
+        .alert(
+            "Delete Officer",
+            isPresented: $showDeleteConfirmation,
+            presenting: officerToDelete
+        ) { officer in
+            Button("Delete", role: .destructive) {
+                Task {
+                    await viewModel.deleteOfficer(officerId: officer.id)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { officer in
+            Text("Are you sure you want to delete \(officer.username)?")
         }
         .task {
             await viewModel.fetchOffices()
