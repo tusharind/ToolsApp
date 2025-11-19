@@ -50,7 +50,7 @@ struct RestockRequestPage: Decodable {
     let empty: Bool
 }
 
-struct Sort: Decodable {
+struct Sort: Codable {
     let empty: Bool
     let sorted: Bool
     let unsorted: Bool

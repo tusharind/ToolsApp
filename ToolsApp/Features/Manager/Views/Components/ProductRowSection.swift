@@ -6,7 +6,7 @@ struct ProductRowSection: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            // Image
+
             if let imageUrl = product.image, let url = URL(string: imageUrl) {
                 AsyncImage(url: url) { image in
                     image.resizable()

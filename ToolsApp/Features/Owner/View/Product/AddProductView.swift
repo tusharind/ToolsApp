@@ -28,10 +28,13 @@ struct AddProductView: View {
 
                 Section("Category") {
                     VStack(spacing: 0) {
-                        TextField("Search Category", text: $viewModel.categorySearchText)
-                            .onChange(of: viewModel.categorySearchText) { newValue,oldValue in
-                                Task { await viewModel.searchCategories() }
-                            }
+                        TextField(
+                            "Search Category",
+                            text: $viewModel.categorySearchText
+                        )
+                        .onChange(of: viewModel.categorySearchText) { _, _ in
+                            Task { await viewModel.searchCategories() }
+                        }
 
                         if viewModel.isCategoryLoading {
                             ProgressView()
@@ -43,14 +46,20 @@ struct AddProductView: View {
                                 VStack(alignment: .leading, spacing: 0) {
                                     ForEach(viewModel.categories) { category in
                                         Button(action: {
-                                            viewModel.selectedCategoryId = category.id
-                                            viewModel.selectedCategoryName = category.categoryName
-                                            viewModel.categorySearchText = category.categoryName
+                                            viewModel.selectedCategoryId =
+                                                category.id
+                                            viewModel.selectedCategoryName =
+                                                category.categoryName
+                                            viewModel.categorySearchText =
+                                                category.categoryName
                                             hideKeyboard()
                                         }) {
                                             Text(category.categoryName)
                                                 .padding()
-                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .frame(
+                                                    maxWidth: .infinity,
+                                                    alignment: .leading
+                                                )
                                         }
                                         .buttonStyle(PlainButtonStyle())
                                         Divider()
@@ -85,23 +94,55 @@ struct AddProductView: View {
     }
 
     private var isFormValid: Bool {
-        !name.isEmpty && !description.isEmpty
-            && Double(price) != nil && Int(rewardPts) != nil
-            && viewModel.selectedCategoryId != nil
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDesc = description.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let trimmedPrice = price.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedReward = rewardPts.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        let nameRegex = "^[A-Za-z ]+$"
+        let nameTest = NSPredicate(format: "SELF MATCHES %@", nameRegex)
+        guard nameTest.evaluate(with: trimmedName) else { return false }
+
+        guard !trimmedDesc.isEmpty else { return false }
+
+        guard let priceValue = Double(trimmedPrice), priceValue > 0 else {
+            return false
+        }
+
+        guard let rewardValue = Int(trimmedReward), rewardValue >= 0 else {
+            return false
+        }
+
+        guard viewModel.selectedCategoryId != nil else { return false }
+
+        return true
     }
 
     private func submitProduct() async {
-        guard let priceValue = Double(price),
-              let rewardValue = Int(rewardPts),
-              let catId = viewModel.selectedCategoryId
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDesc = description.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        let trimmedPrice = price.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedReward = rewardPts.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+
+        guard let priceValue = Double(trimmedPrice),
+            let rewardValue = Int(trimmedReward),
+            let catId = viewModel.selectedCategoryId
         else { return }
 
         isSubmitting = true
         errorMessage = nil
 
         let newProduct = CreateProductRequest(
-            name: name,
-            prodDescription: description,
+            name: trimmedName,
+            prodDescription: trimmedDesc,
             price: priceValue,
             rewardPts: rewardValue,
             categoryId: catId
@@ -119,9 +160,14 @@ struct AddProductView: View {
 }
 
 #if canImport(UIKit)
-extension View {
-    func hideKeyboard() {
-        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    extension View {
+        func hideKeyboard() {
+            UIApplication.shared.sendAction(
+                #selector(UIResponder.resignFirstResponder),
+                to: nil,
+                from: nil,
+                for: nil
+            )
+        }
     }
-}
 #endif

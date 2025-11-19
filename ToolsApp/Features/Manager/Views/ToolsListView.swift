@@ -8,7 +8,6 @@ struct ToolsListView: View {
         NavigationStack {
             VStack {
 
-                // MARK: Search
                 TextField("Search tools…", text: $viewModel.searchText)
                     .textFieldStyle(.roundedBorder)
                     .padding(.horizontal)
@@ -16,17 +15,20 @@ struct ToolsListView: View {
                         viewModel.onSearchChanged()
                     }
 
-                // MARK: Category Chips
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
-                        categoryChip(title: "All", isSelected: viewModel.selectedCategoryId == nil) {
+                        categoryChip(
+                            title: "All",
+                            isSelected: viewModel.selectedCategoryId == nil
+                        ) {
                             viewModel.selectCategory(nil)
                         }
 
                         ForEach(viewModel.categories) { category in
                             categoryChip(
                                 title: category.name,
-                                isSelected: viewModel.selectedCategoryId == category.id
+                                isSelected: viewModel.selectedCategoryId
+                                    == category.id
                             ) {
                                 viewModel.selectCategory(category.id)
                             }
@@ -36,13 +38,14 @@ struct ToolsListView: View {
                     .padding(.vertical, 4)
                 }
 
-                // MARK: Tool Cards
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(viewModel.tools) { tool in
                             ToolCardView(tool: tool)
                                 .onAppear {
-                                    if tool.id == viewModel.tools.last?.id && !viewModel.isLoading {
+                                    if tool.id == viewModel.tools.last?.id
+                                        && !viewModel.isLoading
+                                    {
                                         viewModel.fetchTools()
                                     }
                                 }
@@ -72,7 +75,9 @@ struct ToolsListView: View {
             }
             .alert(
                 item: Binding(
-                    get: { viewModel.errorMessage.map { ErrorMessage(text: $0) } },
+                    get: {
+                        viewModel.errorMessage.map { ErrorMessage(text: $0) }
+                    },
                     set: { _ in viewModel.errorMessage = nil }
                 )
             ) { error in
@@ -85,9 +90,12 @@ struct ToolsListView: View {
         }
     }
 
-    // MARK: Category Chip
     @ViewBuilder
-    func categoryChip(title: String, isSelected: Bool, onTap: @escaping () -> Void) -> some View {
+    func categoryChip(
+        title: String,
+        isSelected: Bool,
+        onTap: @escaping () -> Void
+    ) -> some View {
         Text(title)
             .font(.subheadline)
             .padding(.vertical, 6)
@@ -99,7 +107,6 @@ struct ToolsListView: View {
     }
 }
 
-// MARK: Tool Card View - Horizontal Layout
 struct ToolCardView: View {
     let tool: ToolItem
 
@@ -131,16 +138,17 @@ struct ToolCardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
-// MARK: Flexible Badge View - Horizontal, soft colors, no wrapping
+
 struct FlexibleBadgeView: View {
     let tool: ToolItem
 
     var badges: [(String, Color)] {
         [
             (tool.type, .purple.opacity(0.6)),
-            //(tool.isExpensive, (tool.isExpensive == "YES" ? Color.red : Color.green).opacity(0.6)),
-            //(tool.status, (tool.status == "ACTIVE" ? Color.green : Color.gray).opacity(0.6)),
-            ("Threshold: \(tool.threshold)", (tool.threshold < 20 ? Color.red : Color.green).opacity(0.6))
+            (
+                "Threshold: \(tool.threshold)",
+                (tool.threshold < 20 ? Color.red : Color.green).opacity(0.6)
+            ),
         ]
     }
 
@@ -151,12 +159,12 @@ struct FlexibleBadgeView: View {
                     Text(text)
                         .font(.caption2)
                         .bold()
-                        .padding(.horizontal, 8) // enough space for text
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(color.opacity(0.2)) // soft background
-                        .foregroundColor(color.opacity(0.8)) // muted text
+                        .background(color.opacity(0.2))
+                        .foregroundColor(color.opacity(0.8))
                         .cornerRadius(8)
-                        .fixedSize(horizontal: true, vertical: false) // prevent wrapping
+                        .fixedSize(horizontal: true, vertical: false)
                 }
             }
         }
@@ -164,9 +172,6 @@ struct FlexibleBadgeView: View {
     }
 }
 
-
-
-// MARK: Tool Image View
 struct ToolImageView: View {
     let url: String
 
@@ -191,4 +196,3 @@ struct ToolImageView: View {
         }
     }
 }
-

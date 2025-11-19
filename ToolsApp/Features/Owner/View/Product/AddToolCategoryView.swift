@@ -14,6 +14,8 @@ struct AddToolCategoryView: View {
             Form {
                 Section("Category Info") {
                     TextField("Name", text: $name)
+                        .autocapitalization(.words)
+                        .disableAutocorrection(true)
                     TextField("Description", text: $description)
                 }
                 
@@ -36,7 +38,7 @@ struct AddToolCategoryView: View {
                             Spacer()
                         }
                     }
-                    .disabled(isSubmitting || name.isEmpty || description.isEmpty)
+                    .disabled(isSubmitting || !isValidInput())
                 }
             }
             .navigationTitle("New Category")
@@ -48,10 +50,29 @@ struct AddToolCategoryView: View {
         }
     }
     
+    private func isValidInput() -> Bool {
+
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        let nameRegex = "^[A-Za-z ]+$"
+        let nameTest = NSPredicate(format: "SELF MATCHES %@", nameRegex)
+        guard nameTest.evaluate(with: trimmedName) else { return false }
+        
+        guard !trimmedDescription.isEmpty else { return false }
+        
+        return true
+    }
+    
     private func submitCategory() {
         isSubmitting = true
+        errorMessage = nil
+        
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDescription = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        
         Task {
-            let success = await viewModel.createCategory(name: name, description: description)
+            let success = await viewModel.createCategory(name: trimmedName, description: trimmedDescription)
             isSubmitting = false
             if success {
                 dismiss()
@@ -61,3 +82,4 @@ struct AddToolCategoryView: View {
         }
     }
 }
+

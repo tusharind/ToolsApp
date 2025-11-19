@@ -3,11 +3,16 @@ import SwiftUI
 
 @MainActor
 final class DashboardViewModel: ObservableObject {
+
     @Published var factoryCount: Int?
     @Published var productCount: Int?
     @Published var managerCount: Int?
     @Published var workerCount: Int?
-    
+
+    @Published var categoryProductCounts: [CategoryProductCount] = []
+
+    @Published var factoryInventoryTotals: [FactoryInventoryTotal] = []
+
     @Published var errorMessage: String?
     @Published var isLoading = false
 
@@ -26,38 +31,148 @@ final class DashboardViewModel: ObservableObject {
 
         async let factoryTask = fetchFactoryCount()
         async let productTask = fetchProductCount()
-    
+        async let categoryTask = fetchCategoryProductCounts()
+        async let factoryInventoryTask = fetchFactoryInventoryTotals()
 
-        _ = await (factoryTask, productTask)
+        _ = await (factoryTask, productTask, categoryTask, factoryInventoryTask)
 
         isLoading = false
     }
 
     func fetchFactoryCount() async {
-        let request = APIRequest(path: "/owner/count", method: .GET, parameters: nil, headers: nil, body: nil)
+        let request = APIRequest(
+            path: "/owner/count",
+            method: .GET,
+            parameters: nil,
+            headers: nil,
+            body: nil
+        )
         do {
-            let response = try await client.send(request, responseType: APIResponse<FactoryCountResponse>.self)
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<FactoryCountResponse>.self
+            )
             if response.success, let data = response.data {
                 self.factoryCount = data.count
             } else {
                 self.errorMessage = response.message
             }
         } catch {
-            self.errorMessage = "Error fetching factory count: \(error.localizedDescription)"
+            self.errorMessage =
+                "Error fetching factory count: \(error.localizedDescription)"
         }
     }
 
     func fetchProductCount() async {
-        let request = APIRequest(path: "/owner/productCount", method: .GET, parameters: nil, headers: nil, body: nil)
+        let request = APIRequest(
+            path: "/owner/productCount",
+            method: .GET,
+            parameters: nil,
+            headers: nil,
+            body: nil
+        )
         do {
-            let response = try await client.send(request, responseType: APIResponse<ProductCountResponse>.self)
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<ProductCountResponse>.self
+            )
             if response.success, let data = response.data {
                 self.productCount = data.count
             } else {
                 self.errorMessage = response.message
             }
         } catch {
-            self.errorMessage = "Error fetching product count: \(error.localizedDescription)"
+            self.errorMessage =
+                "Error fetching product count: \(error.localizedDescription)"
+        }
+    }
+
+    func fetchCategoryProductCounts() async {
+        let requestBody = InventoryRequestBody(
+            page: 0,
+            size: 60,
+            sortBy: "createdAt",
+            sortDirection: "ASC"
+        )
+
+        let request = APIRequest(
+            path: "/owner/category-products",
+            method: .POST,
+            body: requestBody
+        )
+
+        do {
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<CategoryProductResponse>.self
+            )
+
+            if response.success, let data = response.data {
+                self.categoryProductCounts = data.content
+                    .filter { $0.productCount > 0 }
+                    .map {
+                        CategoryProductCount(
+                            categoryId: $0.categoryId,
+                            categoryName: $0.categoryName
+                                .trimmingCharacters(in: .whitespaces),
+                            productCount: $0.productCount
+                        )
+                    }
+            } else {
+                self.errorMessage = response.message
+            }
+
+        } catch {
+            self.errorMessage =
+                "Error fetching category products: \(error.localizedDescription)"
+        }
+    }
+
+    func fetchFactoryInventoryTotals() async {
+
+        let requestBody = InventoryRequestBody(
+            page: 0,
+            size: 60,
+            sortBy: "createdAt",
+            sortDirection: "ASC"
+        )
+
+        let request = APIRequest(
+            path: "/inventory/factory-products",
+            method: .POST,
+            body: requestBody
+        )
+
+        do {
+            let response = try await client.send(
+                request,
+                responseType: APIResponse<FactoryProductResponse>.self
+            )
+
+            if response.success, let data = response.data {
+
+                let grouped = Dictionary(
+                    grouping: data.content,
+                    by: { $0.factoryId }
+                )
+
+                self.factoryInventoryTotals = grouped.map { factoryId, items in
+                    FactoryInventoryTotal(
+                        factoryId: factoryId,
+                        factoryName: items.first?.factoryName
+                            .trimmingCharacters(in: .whitespaces) ?? "Unknown",
+                        totalCount: items.reduce(0) { $0 + $1.productCount }
+                    )
+                }
+                .filter { $0.totalCount > 0 }
+
+            } else {
+                self.errorMessage = response.message
+            }
+
+        } catch {
+            self.errorMessage =
+                "Error fetching factory inventory: \(error.localizedDescription)"
         }
     }
 
@@ -71,4 +186,3 @@ final class DashboardViewModel: ObservableObject {
         }
     }
 }
-

@@ -76,3 +76,12 @@ struct Category: Identifiable, Codable, Hashable {
 }
 
 struct EmptyData: Codable {}
+
+struct UpdateProductRequest: Encodable {
+    let name: String
+    let prodDescription: String
+    let price: Double
+    let rewardPts: Int
+    let categoryId: Int
+}
+

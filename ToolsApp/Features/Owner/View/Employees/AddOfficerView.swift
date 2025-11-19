@@ -14,8 +14,14 @@ struct AddOfficerView: View {
             Form {
                 Section("Officer Details") {
                     TextField("Name", text: $name)
+                        .autocapitalization(.words)
+                        .disableAutocorrection(true)
                     TextField("Email", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
                     TextField("Phone", text: $phone)
+                        .keyboardType(.numberPad)
                 }
 
                 if let error = viewModel.errorMessage {
@@ -23,18 +29,13 @@ struct AddOfficerView: View {
                         .foregroundColor(.red)
                 }
 
-                Button("Add Officer") {
-                    Task {
-                        await viewModel.addOfficer(
-                            to: office.id,
-                            name: name,
-                            email: email,
-                            phone: phone.isEmpty ? nil : phone
-                        )
-                        if viewModel.errorMessage == nil {
-                            dismiss()
+                Section {
+                    Button("Add Officer") {
+                        Task {
+                            await submitOfficer()
                         }
                     }
+                    .disabled(!isFormValid)
                 }
             }
             .navigationTitle("Add Officer")
@@ -43,6 +44,49 @@ struct AddOfficerView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+        }
+    }
+
+    private var isFormValid: Bool {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let nameRegex = "^[A-Za-z ]+$"
+        let nameTest = NSPredicate(format: "SELF MATCHES %@", nameRegex)
+        guard nameTest.evaluate(with: trimmedName), !trimmedName.isEmpty else {
+            return false
+        }
+
+        let emailRegex = #"^\S+@\S+\.\S+$"#
+        let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        guard emailTest.evaluate(with: trimmedEmail) else { return false }
+
+        if !trimmedPhone.isEmpty {
+            let phoneRegex = #"^\d{10}$"#
+            let phoneTest = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
+            guard phoneTest.evaluate(with: trimmedPhone) else { return false }
+        }
+
+        return true
+    }
+
+    private func submitOfficer() async {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        viewModel.errorMessage = nil
+
+        await viewModel.addOfficer(
+            to: office.id,
+            name: trimmedName,
+            email: trimmedEmail,
+            phone: trimmedPhone.isEmpty ? nil : trimmedPhone
+        )
+
+        if viewModel.errorMessage == nil {
+            dismiss()
         }
     }
 }

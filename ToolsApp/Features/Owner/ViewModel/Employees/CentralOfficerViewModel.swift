@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 @MainActor
@@ -7,27 +8,39 @@ final class CentralOfficerViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    @Published var searchText: String = "" {
-        didSet {
-            validateSearchText()
-        }
-    }
-
+    @Published var searchText: String = ""
     @Published var selectedRole: String? = nil
 
     private let client = APIClient.shared
+    private var cancellables = Set<AnyCancellable>()
 
-    private func validateSearchText() {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        let cleaned = trimmed.replacingOccurrences(
-            of: #"[^A-Za-z0-9\s@._-]"#,
-            with: "",
-            options: .regularExpression
+    @Published private(set) var filteredOfficesList: [CentralOffice] = []
+
+    init() {
+
+        $searchText
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] text in
+                self?.applyLocalFilter()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func applyLocalFilter() {
+        let trimmedSearch = searchText.trimmingCharacters(
+            in: .whitespacesAndNewlines
         )
-        
-        if cleaned != searchText {
-            searchText = cleaned
+        filteredOfficesList = offices.map { office in
+            var filtered = office
+            filtered.officers = office.officers.filter { officer in
+                (trimmedSearch.isEmpty
+                    || officer.username.localizedCaseInsensitiveContains(
+                        trimmedSearch
+                    ))
+                    && (selectedRole == nil || officer.role == selectedRole)
+            }
+            return filtered
         }
     }
 
@@ -35,16 +48,17 @@ final class CentralOfficerViewModel: ObservableObject {
         input.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    func fetchOffices() async {
+    func fetchOffices(debounceDelay: Double = 0.3) async {
         isLoading = true
         errorMessage = nil
 
+        try? await Task.sleep(
+            nanoseconds: UInt64(debounceDelay * 1_000_000_000)
+        )
+
         let request = APIRequest(
             path: "/owner/central-officer",
-            method: .GET,
-            parameters: nil,
-            headers: nil,
-            body: nil
+            method: .GET
         )
 
         do {
@@ -55,6 +69,7 @@ final class CentralOfficerViewModel: ObservableObject {
 
             if response.success, let officesData = response.data {
                 self.offices = officesData
+                applyLocalFilter()
             } else {
                 self.errorMessage = response.message
             }
@@ -80,7 +95,6 @@ final class CentralOfficerViewModel: ObservableObject {
         let sanitizedName = sanitizedInput(name)
         let sanitizedEmail = sanitizedInput(email)
 
-        
         guard !sanitizedName.isEmpty else {
             self.errorMessage = "Officer name cannot be empty or only spaces."
             return
@@ -109,8 +123,6 @@ final class CentralOfficerViewModel: ObservableObject {
         let request = APIRequest(
             path: "/owner/add-central-officer",
             method: .POST,
-            parameters: nil,
-            headers: nil,
             body: body
         )
 
@@ -133,12 +145,15 @@ final class CentralOfficerViewModel: ObservableObject {
     }
 
     func filteredOfficers(for office: CentralOffice) -> [CentralOfficer] {
-        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedSearch = searchText.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         return office.officers.filter { officer in
             (trimmedSearch.isEmpty
-                || officer.username.localizedCaseInsensitiveContains(trimmedSearch))
+                || officer.username.localizedCaseInsensitiveContains(
+                    trimmedSearch
+                ))
                 && (selectedRole == nil || officer.role == selectedRole)
         }
     }
 }
-

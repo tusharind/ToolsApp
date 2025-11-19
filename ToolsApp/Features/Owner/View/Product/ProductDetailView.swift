@@ -16,7 +16,6 @@ struct ProductDetailView: View {
         ScrollView {
             VStack(spacing: 20) {
 
-                // MARK: IMAGE + ICON
                 ZStack(alignment: .bottomTrailing) {
                     productImageView
 

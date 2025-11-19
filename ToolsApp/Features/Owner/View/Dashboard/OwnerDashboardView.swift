@@ -10,7 +10,7 @@ struct OwnerDashboardView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
                     metricsSection
-                    chartsSection
+                    chartsSection(vm: viewModel)
                     quickLinksSection
                 }
                 .padding()
@@ -39,6 +39,54 @@ struct OwnerDashboardView: View {
             )
             .task {
                 await viewModel.fetchAllMetrics()
+            }
+        }
+    }
+
+    private func chartsSection(vm: DashboardViewModel) -> some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Analytics")
+                .font(.title2)
+                .bold()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Products per Category")
+                    .font(.headline)
+
+                Chart(vm.categoryProductCounts, id: \.categoryId) { item in
+                    SectorMark(
+                        angle: .value("Count", item.productCount),
+                        innerRadius: .ratio(0.4),
+                        angularInset: 2
+                    )
+                    .foregroundStyle(by: .value("Category", item.categoryName))
+                }
+                .frame(height: 260)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+
+            if !vm.factoryInventoryTotals.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Stock Distribution by Factory")
+                        .font(.headline)
+
+                    Chart(vm.factoryInventoryTotals, id: \.factoryId) { item in
+                        SectorMark(
+                            angle: .value("Stock", item.totalCount),
+                            innerRadius: .ratio(0.4),
+                            angularInset: 2
+                        )
+                        .foregroundStyle(
+                            by: .value("Factory", item.factoryName)
+                        )
+                    }
+                    .frame(height: 260)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
             }
         }
     }

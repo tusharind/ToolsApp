@@ -227,10 +227,3 @@ final class ProductsViewModel: ObservableObject {
     }
 }
 
-struct UpdateProductRequest: Encodable {
-    let name: String
-    let prodDescription: String
-    let price: Double
-    let rewardPts: Int
-    let categoryId: Int
-}

@@ -62,7 +62,6 @@ struct EditProductView: View {
     }
 }
 
-// MARK: - Subviews
 extension EditProductView {
     private var imageSection: some View {
         VStack(spacing: 12) {
@@ -176,7 +175,6 @@ extension EditProductView {
     }
 }
 
-// MARK: - Actions
 extension EditProductView {
     private func saveProduct() async {
         guard let priceValue = Double(price),
@@ -197,7 +195,6 @@ extension EditProductView {
         isSaving = true
         defer { isSaving = false }
 
-        // Pass the product.id separately to the viewModel
         let success = await viewModel.editProduct(id: product.id, request)
         if success {
             var updatedProduct = product
@@ -208,7 +205,7 @@ extension EditProductView {
             updatedProduct.categoryId = selectedCategoryId
             updatedProduct.status = selectedStatus
             if let _ = selectedImage {
-                updatedProduct.image = product.image // optional: refresh after upload
+                updatedProduct.image = product.image 
             }
             onSave(updatedProduct)
             dismiss()

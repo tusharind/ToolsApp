@@ -34,8 +34,8 @@ struct CreateEmployeeView: View {
                         Task {
                             await viewModel.createEmployee()
                             if viewModel.successMessage != nil {
-                                onEmployeeCreated?()  //notify parent
-                                dismiss()  //go back to list
+                                onEmployeeCreated?()
+                                dismiss() 
                             }
                         }
                     } label: {

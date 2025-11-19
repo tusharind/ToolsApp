@@ -72,3 +72,36 @@ struct FactoryToolsData: Decodable {
     let first: Bool
     let empty: Bool
 }
+
+struct CategoryProductCountResponse: Codable {
+    let success: Bool
+    let message: String
+    let data: CategoryProductData?
+    let pagination: Pagination?
+    let timestamp: String?
+}
+
+struct CategoryProductData: Codable {
+    let content: [CategoryProductsCount]
+    let pageable: Pageable?
+    let last: Bool
+    let totalPages: Int
+    let totalElements: Int
+    let numberOfElements: Int
+    let size: Int
+    let number: Int
+    let sort: Sort?
+    let first: Bool
+    let empty: Bool
+}
+
+struct CategoryProductsCount: Identifiable, Codable {
+    let categoryId: Int
+    let categoryName: String
+    let productCount: Int
+    
+    var id: Int { categoryId }
+}
+
+
+
