@@ -3,40 +3,58 @@ import SwiftUI
 struct ToolCategoriesListView: View {
     @StateObject private var viewModel = ToolCategoriesViewModel()
     @State private var showAddCategory = false
-    @State private var showEditCategory: ToolCategory? = nil 
+    @State private var showEditCategory: ToolCategory? = nil
+    @State private var searchText = ""
+
+    var filteredCategories: [ToolCategory] {
+        if searchText.isEmpty {
+            return viewModel.categories
+        } else {
+            return viewModel.categories.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                    || $0.description.localizedCaseInsensitiveContains(
+                        searchText
+                    )
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            VStack {
+            Group {
                 if viewModel.categories.isEmpty && viewModel.isLoading {
                     ProgressView("Loading categories...")
                         .padding()
                 } else {
-                    List {
-                        ForEach(viewModel.categories) { category in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(category.name)
-                                        .font(.headline)
-                                    Text(category.description)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                Spacer()
-                                Button {
-                                    showEditCategory = category
-                                } label: {
-                                    Image(systemName: "pencil")
-                                        .foregroundColor(.blue)
-                                }
+                    List(filteredCategories) { category in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category.name)
+                                    .font(.headline)
+                                Text(category.description)
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
                             }
-                            .padding(.vertical, 4)
+                            Spacer()
+                            Button {
+                                showEditCategory = category
+                            } label: {
+                                Image(systemName: "pencil")
+                                    .foregroundColor(.blue)
+                            }
                         }
+                        .padding(.vertical, 4)
                     }
                     .listStyle(.plain)
                 }
             }
             .navigationTitle("Tool Categories")
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: "Search categories"
+            )
+            .disableAutocorrection(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showAddCategory.toggle() }) {

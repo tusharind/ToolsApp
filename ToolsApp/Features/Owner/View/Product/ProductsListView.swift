@@ -26,6 +26,7 @@ private struct CategoryFilterRow: View {
             }
             .padding(.horizontal)
         }
+
     }
 }
 
@@ -65,34 +66,13 @@ private struct StatusFilterRow: View {
 struct ProductsListView: View {
     @StateObject private var viewModel = ProductsViewModel()
     @State private var showAddProduct = false
-    @State private var hasAppeared = false
+    @State private var selectedProduct: Product? = nil
+    @State private var isShowingEditSheet = false
 
     var body: some View {
-        VStack(spacing: 0) {
-
-            VStack(spacing: 10) {
-
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    TextField("Search products", text: $viewModel.searchText)
-                        .textFieldStyle(.plain)
-                        .disableAutocorrection(true)
-                        .autocapitalization(.none)
-
-                    if !viewModel.searchText.isEmpty {
-                        Button {
-                            viewModel.searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                }
-                .padding(10)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
-                .padding(.horizontal)
+        ScrollView {
+            VStack(spacing: 16) {
+                searchBar
 
                 VStack(alignment: .leading, spacing: 10) {
                     CategoryFilterRow(vm: viewModel)
@@ -103,72 +83,39 @@ struct ProductsListView: View {
                 .cornerRadius(12)
                 .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
                 .padding(.horizontal)
-            }
-            .padding(.vertical, 10)
-            .background(Color(UIColor.systemBackground))
-            .overlay(Divider(), alignment: .bottom)
-            .zIndex(1)
 
-            Group {
-                if viewModel.isLoading {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                        Text("Loading products...")
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = viewModel.errorMessage {
-                    VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                            .font(.system(size: 30))
-                        Text(error)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                        Button("Retry") {
-                            Task { await viewModel.fetchProducts() }
-                        }
-                        .buttonStyle(.borderedProminent)
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.products.isEmpty {
-                    VStack(spacing: 12) {
-                        Image(systemName: "shippingbox.fill")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 32))
-                        Text("No products found")
-                            .foregroundColor(.secondary)
-                        Button("Add Product") {
-                            showAddProduct = true
-                        }
-                        .buttonStyle(.bordered)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List(viewModel.products) { product in
-                        NavigationLink {
-                            ProductDetailView(
+                VStack(spacing: 12) {
+                    if viewModel.isLoading {
+                        ProgressView("Loading products…").padding()
+                    } else if let error = viewModel.errorMessage {
+                        Text(error).foregroundColor(.red).padding()
+                    } else if viewModel.products.isEmpty {
+                        emptyView
+                    } else {
+                        ForEach(viewModel.products, id: \.id) { product in
+                            ProductRowCard(
                                 product: product,
-                                viewModel: viewModel
+                                onEdit: {
+                                    selectedProduct = product
+                                    isShowingEditSheet = true
+                                },
+                                onDelete: {
+                                    Task {
+                                        await viewModel.deleteProduct(
+                                            id: product.id
+                                        )
+                                    }
+                                }
                             )
-                        } label: {
-                            ProductRow(product: product)
-                                .padding(.vertical, 4)
+                            .padding(.horizontal)
                         }
                     }
-                    .listStyle(.insetGrouped)
                 }
             }
-            .onChange(of: viewModel.searchText) { _, _ in
-                Task { await viewModel.fetchProducts() }
-            }
-            .onChange(of: viewModel.selectedCategoryId) { _, _ in
-                Task { await viewModel.fetchProducts() }
-            }
-            .onChange(of: viewModel.selectedStatus) { _, _ in
-                Task { await viewModel.fetchProducts() }
-            }
+            .padding(.top, 8)
+        }
+        .task {
+            await viewModel.fetchProducts()
         }
         .navigationTitle("Products")
         .toolbar {
@@ -183,10 +130,168 @@ struct ProductsListView: View {
         .sheet(isPresented: $showAddProduct) {
             AddProductView(viewModel: viewModel)
         }
-        .onAppear {
-            guard !hasAppeared else { return }
-            hasAppeared = true
+        .sheet(isPresented: $isShowingEditSheet) {
+            if let product = selectedProduct {
+                EditProductView(product: product, viewModel: viewModel) {
+                    updatedProduct in
+                    if let index = viewModel.products.firstIndex(where: {
+                        $0.id == updatedProduct.id
+                    }) {
+                        viewModel.products[index] = updatedProduct
+                    }
+                    selectedProduct = updatedProduct
+                    isShowingEditSheet = false
+                }
+            }
+        }
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass").foregroundColor(.gray)
+            TextField("Search products", text: $viewModel.searchText)
+                .textFieldStyle(.plain)
+                .disableAutocorrection(true)
+                .autocapitalization(.none)
+            if !viewModel.searchText.isEmpty {
+                Button {
+                    viewModel.searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundColor(
+                        .gray
+                    )
+                }
+            }
+        }
+        .padding(10)
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+        .padding(.horizontal)
+        .onChange(of: viewModel.searchText) { _, _ in
             Task { await viewModel.fetchProducts() }
         }
+    }
+
+    private var emptyView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "shippingbox.fill")
+                .font(.system(size: 32))
+                .foregroundColor(.secondary)
+            Text("No products found").foregroundColor(.secondary)
+            Button("Add Product") { showAddProduct = true }
+                .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, minHeight: 200)
+    }
+}
+
+struct ProductRowCard: View {
+    let product: Product
+    let onEdit: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 12) {
+
+                if let urlString = product.image,
+                    let url = URL(string: urlString)
+                {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .empty: ProgressView()
+                        case .success(let img): img.resizable().scaledToFill()
+                        case .failure: placeholderImage
+                        @unknown default: placeholderImage
+                        }
+                    }
+                    .frame(width: 80, height: 80)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                } else {
+                    placeholderImage
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(product.name)
+                        .font(.headline)
+                    if !product.prodDescription.isEmpty {
+                        Text(product.prodDescription)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Text(product.categoryName)
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .padding(4)
+                        .background(Color.blue.opacity(0.7))
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                    HStack {
+                        Text("₹\(product.price, specifier: "%.2f")")
+                            .font(.subheadline)
+                            .foregroundColor(.blue)
+                        Text("\(product.rewardPts) pts")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .padding(4)
+                            .background(Color.orange.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        Spacer()
+                        Text(product.status.capitalized)
+                            .font(.caption)
+                            .bold()
+                            .foregroundColor(.white)
+                            .padding(4)
+                            .background(
+                                product.status.lowercased() == "active"
+                                    ? Color.green
+                                    : Color.red
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+
+                    }
+                }
+                Spacer()
+            }
+
+            HStack(spacing: 40) {
+                Spacer()
+                Button {
+                    onEdit()
+                } label: {
+                    HStack {
+                        Image(systemName: "pencil")
+                        Text("Edit")
+                    }
+                    .foregroundColor(.green)
+                }
+                Button {
+                    onDelete()
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("Delete")
+                    }
+                    .foregroundColor(.red)
+                }
+                Spacer()
+            }
+            .padding(.top, 8)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.03), radius: 2, x: 0, y: 1)
+    }
+
+    private var placeholderImage: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color.gray.opacity(0.1))
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 28))
+                    .foregroundColor(.gray)
+            )
     }
 }

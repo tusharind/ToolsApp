@@ -3,25 +3,28 @@ import SwiftUI
 struct EditProductView: View {
     @ObservedObject var viewModel: ProductsViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var name: String
     @State private var description: String
     @State private var price: String
     @State private var rewardPts: String
     @State private var selectedCategoryId: Int
     @State private var selectedStatus: String
-    @State private var selectedImage: UIImage?
 
+    @State private var uploadedImage: UIImage?
     @State private var isShowingImagePicker = false
     @State private var isSaving = false
     @State private var errorMessage: String?
 
     private let product: Product
     private let onSave: (Product) -> Void
-
     private let statuses = ["ACTIVE", "INACTIVE"]
 
-    init(product: Product, viewModel: ProductsViewModel, onSave: @escaping (Product) -> Void) {
+    init(
+        product: Product,
+        viewModel: ProductsViewModel,
+        onSave: @escaping (Product) -> Void
+    ) {
         self.product = product
         self.viewModel = viewModel
         self.onSave = onSave
@@ -32,23 +35,22 @@ struct EditProductView: View {
         _rewardPts = State(initialValue: "\(product.rewardPts)")
         _selectedCategoryId = State(initialValue: product.categoryId)
         _selectedStatus = State(initialValue: product.status.uppercased())
-        _selectedImage = State(initialValue: nil)
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 24) {
                     imageSection
                     inputFields
-                    categoryPicker
-                    statusPicker
                     saveButton
 
                     if let errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.red)
                             .font(.footnote)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 4)
                     }
                 }
                 .padding()
@@ -56,7 +58,20 @@ struct EditProductView: View {
             .navigationTitle("Edit Product")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $isShowingImagePicker) {
-                ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+                NavigationStack {
+                    ImagePicker(
+                        selectedImage: $viewModel.selectedImage,
+                        sourceType: .photoLibrary
+                    )
+                    .navigationTitle("Select Image")
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                isShowingImagePicker = false
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -65,8 +80,14 @@ struct EditProductView: View {
 extension EditProductView {
     private var imageSection: some View {
         VStack(spacing: 12) {
-            Group {
-                if let image = selectedImage {
+            ZStack {
+                if let image = uploadedImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 180, height: 180)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                } else if let image = viewModel.selectedImage {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
@@ -75,7 +96,8 @@ extension EditProductView {
                 } else if let url = URL(string: product.image ?? "") {
                     AsyncImage(url: url) { phase in
                         switch phase {
-                        case .empty: ProgressView().frame(width: 180, height: 180)
+                        case .empty:
+                            ProgressView().frame(width: 180, height: 180)
                         case .success(let image):
                             image.resizable()
                                 .scaledToFill()
@@ -91,9 +113,11 @@ extension EditProductView {
             }
             .onTapGesture { isShowingImagePicker = true }
 
-            Button(selectedImage == nil ? "Edit Image" : "Upload Image") {
-                if selectedImage != nil {
-                    Task { await uploadImage() }
+            Button(
+                viewModel.selectedImage == nil ? "Select Image" : "Upload Image"
+            ) {
+                if let image = viewModel.selectedImage {
+                    Task { await uploadImage(image: image) }
                 } else {
                     isShowingImagePicker = true
                 }
@@ -108,14 +132,14 @@ extension EditProductView {
     }
 
     private var placeholderImage: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.gray.opacity(0.1))
-                .frame(width: 180, height: 180)
-            Image(systemName: "photo")
-                .font(.system(size: 48))
-                .foregroundColor(.gray)
-        }
+        RoundedRectangle(cornerRadius: 16)
+            .fill(Color.gray.opacity(0.1))
+            .frame(width: 180, height: 180)
+            .overlay(
+                Image(systemName: "photo")
+                    .font(.system(size: 48))
+                    .foregroundColor(.gray)
+            )
     }
 
     private var inputFields: some View {
@@ -131,30 +155,9 @@ extension EditProductView {
                 .keyboardType(.numberPad)
                 .textFieldStyle(.roundedBorder)
         }
-    }
-
-    private var categoryPicker: some View {
-        VStack(alignment: .leading) {
-            Text("Category").bold()
-            Picker("Category", selection: $selectedCategoryId) {
-                ForEach(viewModel.categories) { category in
-                    Text(category.categoryName).tag(category.id)
-                }
-            }
-            .pickerStyle(.menu)
-        }
-    }
-
-    private var statusPicker: some View {
-        VStack(alignment: .leading) {
-            Text("Status").bold()
-            Picker("Status", selection: $selectedStatus) {
-                ForEach(statuses, id: \.self) { status in
-                    Text(status.capitalized).tag(status)
-                }
-            }
-            .pickerStyle(.menu)
-        }
+        .padding()
+        .background(Color.gray.opacity(0.05))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private var saveButton: some View {
@@ -178,7 +181,7 @@ extension EditProductView {
 extension EditProductView {
     private func saveProduct() async {
         guard let priceValue = Double(price),
-              let rewardValue = Int(rewardPts)
+            let rewardValue = Int(rewardPts)
         else {
             errorMessage = "Enter valid price and reward points."
             return
@@ -204,9 +207,7 @@ extension EditProductView {
             updatedProduct.rewardPts = rewardValue
             updatedProduct.categoryId = selectedCategoryId
             updatedProduct.status = selectedStatus
-            if let _ = selectedImage {
-                updatedProduct.image = product.image 
-            }
+            updatedProduct.image = product.image  // keep URL
             onSave(updatedProduct)
             dismiss()
         } else {
@@ -214,10 +215,15 @@ extension EditProductView {
         }
     }
 
-    private func uploadImage() async {
-        guard let image = selectedImage else { return }
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return }
+    private func uploadImage(image: UIImage) async {
+        isSaving = true
+        defer { isSaving = false }
+
         await viewModel.uploadImage(for: product.id)
+
+        await MainActor.run {
+            uploadedImage = image
+            viewModel.selectedImage = nil
+        }
     }
 }
-
