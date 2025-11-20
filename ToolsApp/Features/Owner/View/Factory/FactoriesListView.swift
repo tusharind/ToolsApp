@@ -7,7 +7,7 @@ struct FactoriesListView: View {
 
     var body: some View {
         VStack {
-  
+
             VStack(spacing: 8) {
                 TextField(
                     "Search factories, cities, or addresses",
@@ -24,19 +24,6 @@ struct FactoriesListView: View {
                 if viewModel.isLoading && viewModel.factories.isEmpty {
                     ProgressView("Loading factories...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = viewModel.errorMessage {
-                    VStack(spacing: 10) {
-                        Text(error)
-                            .foregroundColor(.red)
-                        Button("Retry") {
-                            Task {
-                                await viewModel.fetchFactories(
-                                    page: viewModel.currentPage
-                                )
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if viewModel.factories.isEmpty {
                     VStack {
                         Image(systemName: "building.2")

@@ -21,46 +21,64 @@ struct ToolCategoriesListView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if viewModel.categories.isEmpty && viewModel.isLoading {
-                    ProgressView("Loading categories...")
-                        .padding()
-                } else {
-                    List(filteredCategories) { category in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(category.name)
-                                    .font(.headline)
-                                Text(category.description)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
+            ZStack(alignment: .bottomTrailing) {
+
+                Group {
+                    if viewModel.categories.isEmpty && viewModel.isLoading {
+                        VStack {
                             Spacer()
-                            Button {
-                                showEditCategory = category
-                            } label: {
-                                Image(systemName: "pencil")
-                                    .foregroundColor(.blue)
-                            }
+                            ProgressView("Loading categories...")
+                            Spacer()
                         }
-                        .padding(.vertical, 4)
+                    } else if filteredCategories.isEmpty {
+                        VStack {
+                            Spacer()
+                            Text("No categories found")
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
+                    } else {
+                        List(filteredCategories) { category in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(category.name)
+                                        .font(.headline)
+                                    Text(category.description)
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                Spacer()
+                                Button {
+                                    showEditCategory = category
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
-            }
-            .navigationTitle("Tool Categories")
-            .searchable(
-                text: $searchText,
-                placement: .navigationBarDrawer(displayMode: .automatic),
-                prompt: "Search categories"
-            )
-            .disableAutocorrection(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showAddCategory.toggle() }) {
-                        Image(systemName: "plus")
-                    }
+                .navigationTitle("Tool Categories")
+                .searchable(
+                    text: $searchText,
+                    placement: .navigationBarDrawer(displayMode: .automatic),
+                    prompt: "Search categories"
+                )
+                .disableAutocorrection(true)
+
+                Button(action: { showAddCategory = true }) {
+                    Image(systemName: "plus")
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 5)
                 }
+                .padding(.trailing, 20)
+                .padding(.bottom, 20)
             }
             .sheet(isPresented: $showAddCategory) {
                 AddToolCategoryView(viewModel: viewModel)

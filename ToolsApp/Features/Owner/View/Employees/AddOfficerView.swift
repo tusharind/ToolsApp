@@ -8,6 +8,7 @@ struct AddOfficerView: View {
     @State private var name = ""
     @State private var email = ""
     @State private var phone = ""
+    @State private var isSubmitting = false
 
     var body: some View {
         NavigationView {
@@ -30,12 +31,21 @@ struct AddOfficerView: View {
                 }
 
                 Section {
-                    Button("Add Officer") {
+                    Button {
                         Task {
                             await submitOfficer()
                         }
+                    } label: {
+                        if isSubmitting {
+                            HStack {
+                                ProgressView()
+                                Text("Adding...")
+                            }
+                        } else {
+                            Text("Add Officer")
+                        }
                     }
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || isSubmitting)
                 }
             }
             .navigationTitle("Add Officer")
@@ -72,21 +82,25 @@ struct AddOfficerView: View {
     }
 
     private func submitOfficer() async {
+        isSubmitting = true
+        defer { isSubmitting = false }
+
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
 
         viewModel.errorMessage = nil
 
-        await viewModel.addOfficer(
+        let success = await viewModel.addOfficer(
             to: office.id,
             name: trimmedName,
             email: trimmedEmail,
             phone: trimmedPhone.isEmpty ? nil : trimmedPhone
         )
 
-        if viewModel.errorMessage == nil {
+        if success {
             dismiss()
         }
     }
+
 }

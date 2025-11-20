@@ -44,3 +44,10 @@ struct ToolCreationResponse: Codable {
     let timestamp:String 
 }
 
+enum ToolType: String, CaseIterable, Identifiable {
+    case notPerishable = "NOT_PERISHABLE"
+    case perishable = "PERISHABLE"
+    
+    var id: String { rawValue }
+}
+

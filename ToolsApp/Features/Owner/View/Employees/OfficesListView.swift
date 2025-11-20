@@ -12,10 +12,7 @@ struct CentralOfficesView: View {
             if viewModel.isLoading {
                 ProgressView("Loading offices...")
                     .padding()
-            } else if let error = viewModel.errorMessage {
-                Text(error)
-                    .foregroundColor(.red)
-                    .padding()
+
             } else {
                 ScrollView {
                     LazyVStack(spacing: 16) {

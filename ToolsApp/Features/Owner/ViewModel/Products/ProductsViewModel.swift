@@ -226,4 +226,3 @@ final class ProductsViewModel: ObservableObject {
         }
     }
 }
-

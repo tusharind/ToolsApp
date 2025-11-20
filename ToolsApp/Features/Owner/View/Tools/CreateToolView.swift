@@ -1,23 +1,16 @@
 import SwiftUI
 
-enum ToolType: String, CaseIterable, Identifiable {
-    case notPerishable = "NOT_PERISHABLE"
-    case perishable = "PERISHABLE"
-    
-    var id: String { rawValue }
-}
-
 struct CreateToolView: View {
     @StateObject private var viewModel = CreateToolViewModel()
     @State private var showImagePicker = false
-    
+
     @State private var nameTouched = false
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    
+
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Name")
                             .font(.headline)
@@ -26,19 +19,24 @@ struct CreateToolView: View {
                             .background(Color(.secondarySystemBackground))
                             .cornerRadius(8)
                             .autocapitalization(.words)
-                            .onChange(of: viewModel.name) { _, _ in nameTouched = true }
-                        
+                            .onChange(of: viewModel.name) { _, _ in
+                                nameTouched = true
+                            }
+
                         if let error = nameError {
                             Text(error)
                                 .foregroundColor(.red)
                                 .font(.caption)
                         }
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Category")
                             .font(.headline)
-                        Picker("Select a category", selection: $viewModel.selectedCategoryId) {
+                        Picker(
+                            "Select a category",
+                            selection: $viewModel.selectedCategoryId
+                        ) {
                             Text("Select a category").tag(Int?.none)
                             ForEach(viewModel.categories) { cat in
                                 Text(cat.name).tag(Int?(cat.id))
@@ -49,24 +47,28 @@ struct CreateToolView: View {
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(8)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 5) {
                         Text("Type")
                             .font(.headline)
                         Picker("Select type", selection: $viewModel.type) {
                             ForEach(ToolType.allCases) { type in
-                                Text(type.rawValue).tag(type)
+                                Text(type.rawValue.displayName).tag(type)
                             }
                         }
                         .pickerStyle(.segmented)
                     }
-                    
+
                     Toggle("Is Expensive", isOn: $viewModel.isExpensiveBool)
                         .padding(.top)
-  
-                    Stepper("Threshold: \(viewModel.threshold)", value: $viewModel.threshold, in: 0...100)
-                        .padding(.top)
-                    
+
+                    Stepper(
+                        "Threshold: \(viewModel.threshold)",
+                        value: $viewModel.threshold,
+                        in: 0...100
+                    )
+                    .padding(.top)
+
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Image")
                             .font(.headline)
@@ -84,23 +86,28 @@ struct CreateToolView: View {
                         .buttonStyle(.borderedProminent)
                     }
                     .padding(.top)
-                    
+
                     Button(action: {
                         Task { await viewModel.createTool() }
                     }) {
                         Text("Create Tool")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(isFormValid && viewModel.selectedCategoryId != nil && viewModel.type != nil && viewModel.selectedImage != nil ? Color.accentColor : Color.gray.opacity(0.5))
+                            .background(
+                                isFormValid
+                                    && viewModel.selectedCategoryId != nil
+                                    && viewModel.selectedImage != nil
+                                    ? Color.accentColor
+                                    : Color.gray.opacity(0.5)
+                            )
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
                     .disabled(
                         viewModel.isLoading
-                        || !isFormValid
-                        || viewModel.selectedCategoryId == nil
-                        || viewModel.type == nil
-                        || viewModel.selectedImage == nil
+                            || !isFormValid
+                            || viewModel.selectedCategoryId == nil
+                            || viewModel.selectedImage == nil
                     )
                     .padding(.vertical)
                 }
@@ -119,21 +126,24 @@ struct CreateToolView: View {
             }
         }
     }
-    
+
     private var nameError: String? {
         guard nameTouched else { return nil }
-        let trimmed = viewModel.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = viewModel.name.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         if trimmed.isEmpty { return "Name cannot be empty" }
-        
+
         let regex = "^[A-Za-z ]+$"
-        if !NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: trimmed) {
+        if !NSPredicate(format: "SELF MATCHES %@", regex).evaluate(
+            with: trimmed
+        ) {
             return "Name can contain letters and spaces only"
         }
         return nil
     }
-    
+
     private var isFormValid: Bool {
         nameError == nil
     }
 }
-

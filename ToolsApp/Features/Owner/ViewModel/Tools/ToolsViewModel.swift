@@ -135,7 +135,7 @@ final class ToolsViewModel: ObservableObject {
         self.categoryId = id
         fetchTools(reset: true)
     }
-    
+
     func fetchToolById(_ id: Int) async -> ToolItem? {
         do {
             let request = APIRequest(
@@ -158,7 +158,7 @@ final class ToolsViewModel: ObservableObject {
             return nil
         }
     }
-    
+
     func deleteTool(_ id: Int) {
         Task {
             do {
@@ -169,7 +169,7 @@ final class ToolsViewModel: ObservableObject {
                     headers: nil
                 )
 
-                let response: APIResponse<EmptyResponse> =
+                let _: APIResponse<EmptyResponse> =
                     try await APIClient.shared.send(
                         request,
                         responseType: APIResponse<EmptyResponse>.self
@@ -187,6 +187,4 @@ final class ToolsViewModel: ObservableObject {
         }
     }
 
-
 }
-

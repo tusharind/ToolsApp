@@ -43,7 +43,7 @@ final class CentralOfficerViewModel: ObservableObject {
             return filtered
         }
     }
-    
+
     func deleteOfficer(officerId: Int) async {
         isLoading = true
         errorMessage = nil
@@ -60,10 +60,10 @@ final class CentralOfficerViewModel: ObservableObject {
             )
 
             if response.success {
-              
+
                 await fetchOffices()
             } else {
-          
+
                 self.errorMessage = response.message
             }
         } catch {
@@ -72,7 +72,6 @@ final class CentralOfficerViewModel: ObservableObject {
 
         isLoading = false
     }
-
 
     private func sanitizedInput(_ input: String) -> String {
         input.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -115,33 +114,42 @@ final class CentralOfficerViewModel: ObservableObject {
             $0.email.lowercased() == email.lowercased()
         }
     }
+    
+    func statusColor(_ status: String) -> Color {
+        switch status.lowercased() {
+        case "active": return .green
+        case "inactive": return .red
+        case "pending": return .orange
+        default: return .blue
+        }
+    }
 
     func addOfficer(
         to officeId: Int,
         name: String,
         email: String,
         phone: String?
-    ) async {
+    ) async -> Bool {  // <- return Bool
         let sanitizedName = sanitizedInput(name)
         let sanitizedEmail = sanitizedInput(email)
 
         guard !sanitizedName.isEmpty else {
-            self.errorMessage = "Officer name cannot be empty or only spaces."
-            return
+            self.errorMessage = "Officer name cannot be empty."
+            return false
         }
 
         guard !sanitizedEmail.isEmpty else {
-            self.errorMessage = "Officer email cannot be empty or only spaces."
-            return
+            self.errorMessage = "Officer email cannot be empty."
+            return false
         }
 
         guard canAddOfficer(email: sanitizedEmail) else {
             self.errorMessage = "This officer is already assigned to an office"
-            return
+            return false
         }
 
         isLoading = true
-        errorMessage = nil
+        defer { isLoading = false }
 
         let body = AddOfficerRequest(
             centralOfficeId: officeId,
@@ -164,14 +172,15 @@ final class CentralOfficerViewModel: ObservableObject {
 
             if response.success {
                 await fetchOffices()
+                return true
             } else {
                 self.errorMessage = response.message
+                return false
             }
         } catch {
             self.errorMessage = error.localizedDescription
+            return false
         }
-
-        isLoading = false
     }
 
     func filteredOfficers(for office: CentralOffice) -> [CentralOfficer] {
