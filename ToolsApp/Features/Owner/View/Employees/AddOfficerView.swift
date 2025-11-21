@@ -5,47 +5,64 @@ struct AddOfficerView: View {
     @ObservedObject var viewModel: CentralOfficerViewModel
     @Environment(\.dismiss) private var dismiss
 
-    @State private var name = ""
-    @State private var email = ""
-    @State private var phone = ""
-    @State private var isSubmitting = false
-
     var body: some View {
         NavigationView {
             Form {
                 Section("Officer Details") {
-                    TextField("Name", text: $name)
-                        .autocapitalization(.words)
-                        .disableAutocorrection(true)
-                    TextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                    TextField("Phone", text: $phone)
-                        .keyboardType(.numberPad)
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Name", text: $viewModel.name)
+                            .autocapitalization(.words)
+                            .disableAutocorrection(true)
+                        if let error = viewModel.nameError {
+                            Text(error).foregroundColor(.red).font(.caption)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Email", text: $viewModel.email)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(true)
+                        if let error = viewModel.emailError {
+                            Text(error).foregroundColor(.red).font(.caption)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Phone", text: $viewModel.phone)
+                            .keyboardType(.numberPad)
+                        if let error = viewModel.phoneError {
+                            Text(error).foregroundColor(.red).font(.caption)
+                        }
+                    }
                 }
 
-                if let error = viewModel.errorMessage {
-                    Text(error)
+                if let generalError = viewModel.errorMessage {
+                    Text(generalError)
                         .foregroundColor(.red)
+                        .font(.footnote)
                 }
 
                 Section {
                     Button {
                         Task {
-                            await submitOfficer()
+                            let success = await viewModel.addOfficer(
+                                to: office.id
+                            )
+                            if success { dismiss() }
                         }
                     } label: {
-                        if isSubmitting {
-                            HStack {
-                                ProgressView()
-                                Text("Adding...")
+                        HStack {
+                            if viewModel.isSubmitting {
+                                ProgressView().progressViewStyle(.circular)
+                                Text("Adding...").padding(.leading, 4)
+                            } else {
+                                Text("Add Officer")
                             }
-                        } else {
-                            Text("Add Officer")
                         }
+                        .frame(maxWidth: .infinity)
                     }
-                    .disabled(!isFormValid || isSubmitting)
+                    .disabled(!viewModel.isFormValid || viewModel.isSubmitting)
                 }
             }
             .navigationTitle("Add Officer")
@@ -54,53 +71,9 @@ struct AddOfficerView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
+            .alert(viewModel.alertMessage, isPresented: $viewModel.showAlert) {
+                Button("OK", role: .cancel) {}
+            }
         }
     }
-
-    private var isFormValid: Bool {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let nameRegex = "^[A-Za-z ]+$"
-        let nameTest = NSPredicate(format: "SELF MATCHES %@", nameRegex)
-        guard nameTest.evaluate(with: trimmedName), !trimmedName.isEmpty else {
-            return false
-        }
-
-        let emailRegex = #"^\S+@\S+\.\S+$"#
-        let emailTest = NSPredicate(format: "SELF MATCHES %@", emailRegex)
-        guard emailTest.evaluate(with: trimmedEmail) else { return false }
-
-        if !trimmedPhone.isEmpty {
-            let phoneRegex = #"^\d{10}$"#
-            let phoneTest = NSPredicate(format: "SELF MATCHES %@", phoneRegex)
-            guard phoneTest.evaluate(with: trimmedPhone) else { return false }
-        }
-
-        return true
-    }
-
-    private func submitOfficer() async {
-        isSubmitting = true
-        defer { isSubmitting = false }
-
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedPhone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        viewModel.errorMessage = nil
-
-        let success = await viewModel.addOfficer(
-            to: office.id,
-            name: trimmedName,
-            email: trimmedEmail,
-            phone: trimmedPhone.isEmpty ? nil : trimmedPhone
-        )
-
-        if success {
-            dismiss()
-        }
-    }
-
 }

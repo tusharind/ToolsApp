@@ -17,8 +17,8 @@ final class CreateRestockRequestViewModel: ObservableObject {
     @Published var myRequestsError: String?
 
     var isValid: Bool {
-        guard let factoryId = selectedFactoryId,
-            let productId = selectedProductId,
+        guard selectedFactoryId != nil,
+            selectedProductId != nil,
             let qty = Int(qtyRequested),
             qty > 0
         else { return false }

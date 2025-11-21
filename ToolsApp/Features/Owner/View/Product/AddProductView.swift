@@ -4,28 +4,80 @@ struct AddProductView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: ProductsViewModel
 
-    @State private var name: String = ""
-    @State private var description: String = ""
-    @State private var price: String = ""
-    @State private var rewardPts: String = ""
-    @State private var isSubmitting = false
-    @State private var errorMessage: String?
-
     var body: some View {
         NavigationView {
             Form {
                 Section("Product Details") {
-                    TextField("Name", text: $name)
-                    TextField("Description", text: $description)
+                    VStack(alignment: .leading) {
+                        TextField("Name", text: $viewModel.name)
+                            .autocapitalization(.words)
+                            .onChange(of: viewModel.name) {
+                                oldValue,
+                                newValue in viewModel.nameTouched = true
+                            }
+
+                        if viewModel.nameTouched,
+                            let error = viewModel.nameError
+                        {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                        }
+                    }
+
+                    VStack(alignment: .leading) {
+                        TextField("Description", text: $viewModel.description)
+                            .autocapitalization(.sentences)
+                            .onChange(of: viewModel.description) {
+                                oldValue,
+                                newValue in viewModel.descriptionTouched = true
+                            }
+
+                        if viewModel.descriptionTouched,
+                            let error = viewModel.descriptionError
+                        {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                        }
+                    }
                 }
 
                 Section("Pricing") {
-                    TextField("Price (₹)", text: $price)
-                        .keyboardType(.decimalPad)
-                    TextField("Reward Points", text: $rewardPts)
-                        .keyboardType(.numberPad)
-                }
+                    VStack(alignment: .leading) {
+                        TextField("Price (₹)", text: $viewModel.price)
+                            .keyboardType(.decimalPad)
+                            .onChange(of: viewModel.price) {
+                                oldValue,
+                                newValue in viewModel.priceTouched = true
+                            }
 
+                        if viewModel.priceTouched,
+                            let error = viewModel.priceError
+                        {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                        }
+                    }
+
+                    VStack(alignment: .leading) {
+                        TextField("Reward Points", text: $viewModel.rewardPts)
+                            .keyboardType(.numberPad)
+                            .onChange(of: viewModel.rewardPts) {
+                                oldValue,
+                                newValue in viewModel.rewardTouched = true
+                            }
+
+                        if viewModel.rewardTouched,
+                            let error = viewModel.rewardError
+                        {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                        }
+                    }
+                }
                 Section("Category") {
                     VStack(spacing: 0) {
                         TextField(
@@ -35,6 +87,8 @@ struct AddProductView: View {
                         .onChange(of: viewModel.categorySearchText) { _, _ in
                             Task { await viewModel.searchCategories() }
                         }
+                        .textFieldStyle(.roundedBorder)
+                        .disableAutocorrection(true)
 
                         if viewModel.isCategoryLoading {
                             ProgressView()
@@ -52,6 +106,7 @@ struct AddProductView: View {
                                                 category.categoryName
                                             viewModel.categorySearchText =
                                                 category.categoryName
+                                            viewModel.categoryTouched = true
                                             hideKeyboard()
                                         }) {
                                             Text(category.categoryName)
@@ -70,91 +125,41 @@ struct AddProductView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
                         }
+
+                        if viewModel.categoryTouched,
+                            let error = viewModel.categoryError
+                        {
+                            Text(error)
+                                .foregroundColor(.red)
+                                .font(.caption)
+                        }
                     }
                 }
 
-                if let error = errorMessage {
-                    Text(error)
+                if !viewModel.alertMessage.isEmpty {
+                    Text(viewModel.alertMessage)
                         .foregroundColor(.red)
                         .font(.footnote)
                 }
             }
-            .disabled(isSubmitting)
+            .disabled(viewModel.isSubmitting)
             .navigationTitle("Add Product")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") { Task { await submitProduct() } }
-                        .disabled(!isFormValid)
+                    Button("Save") {
+                        Task { await viewModel.createProduct() }
+                    }
+                    .disabled(!viewModel.isFormValid)
                 }
             }
-        }
-    }
-
-    private var isFormValid: Bool {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedDesc = description.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        let trimmedPrice = price.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedReward = rewardPts.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        let nameRegex = "^[A-Za-z ]+$"
-        let nameTest = NSPredicate(format: "SELF MATCHES %@", nameRegex)
-        guard nameTest.evaluate(with: trimmedName) else { return false }
-
-        guard !trimmedDesc.isEmpty else { return false }
-
-        guard let priceValue = Double(trimmedPrice), priceValue > 0 else {
-            return false
-        }
-
-        guard let rewardValue = Int(trimmedReward), rewardValue >= 0 else {
-            return false
-        }
-
-        guard viewModel.selectedCategoryId != nil else { return false }
-
-        return true
-    }
-
-    private func submitProduct() async {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedDesc = description.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        let trimmedPrice = price.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedReward = rewardPts.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        guard let priceValue = Double(trimmedPrice),
-            let rewardValue = Int(trimmedReward),
-            let catId = viewModel.selectedCategoryId
-        else { return }
-
-        isSubmitting = true
-        errorMessage = nil
-
-        let newProduct = CreateProductRequest(
-            name: trimmedName,
-            prodDescription: trimmedDesc,
-            price: priceValue,
-            rewardPts: rewardValue,
-            categoryId: catId
-        )
-
-        let success = await viewModel.addProduct(newProduct)
-        isSubmitting = false
-
-        if success {
-            dismiss()
-        } else {
-            errorMessage = viewModel.errorMessage ?? "Something went wrong."
+            .alert("Result", isPresented: $viewModel.showAlert) {
+                Button("OK") { dismiss() }
+            } message: {
+                Text(viewModel.alertMessage)
+            }
         }
     }
 }

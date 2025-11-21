@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 @MainActor
@@ -35,12 +36,23 @@ final class ProductsViewModel: ObservableObject {
             }
         }
     }
-
     @Published var categories: [Category] = []
     @Published var isCategoryLoading: Bool = false
 
-    @Published var showDeleteConfirmation = false
-    @Published var deleteSuccess = false
+    @Published var name: String = ""
+    @Published var description: String = ""
+    @Published var price: String = ""
+    @Published var rewardPts: String = ""
+
+    @Published var nameTouched: Bool = false
+    @Published var descriptionTouched: Bool = false
+    @Published var priceTouched: Bool = false
+    @Published var rewardTouched: Bool = false
+    @Published var categoryTouched: Bool = false
+
+    @Published var isSubmitting: Bool = false
+    @Published var showAlert: Bool = false
+    @Published var alertMessage: String = ""
 
     private let client = APIClient.shared
     private let repository = ProductRepository()
@@ -77,54 +89,9 @@ final class ProductsViewModel: ObservableObject {
             } catch {
                 errorMessage =
                     "Failed to load products: \(error.localizedDescription)"
-                print("Error:", error)
             }
         }
         await fetchTask?.value
-    }
-
-    func addProduct(_ newProduct: CreateProductRequest) async -> Bool {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            let createdProduct = try await repository.addProduct(newProduct)
-            products.append(createdProduct)
-            return true
-        } catch {
-            errorMessage =
-                "Failed to add product: \(error.localizedDescription)"
-            print("Error adding product:", error)
-            return false
-        }
-    }
-
-    func editProduct(id: Int, _ updatedProduct: UpdateProductRequest) async
-        -> Bool
-    {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-
-            let updated = try await repository.updateProduct(
-                id: id,
-                updatedProduct: updatedProduct
-            )
-
-            if let index = products.firstIndex(where: { $0.id == updated.id }) {
-                products[index] = updated
-            } else {
-                products.append(updated)
-            }
-
-            return true
-        } catch {
-            errorMessage =
-                "Failed to update product: \(error.localizedDescription)"
-            print("Error updating product:", error)
-            return false
-        }
     }
 
     func loadAllCategories() async {
@@ -162,8 +129,142 @@ final class ProductsViewModel: ObservableObject {
                 print("Category search failed:", error)
             }
         }
-
         await categoryTask?.value
+    }
+
+    var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    var trimmedDescription: String {
+        description.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    var trimmedPrice: String {
+        price.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    var trimmedReward: String {
+        rewardPts.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var nameError: String? {
+        let regex = "^[A-Za-z ]+$"
+        let test = NSPredicate(format: "SELF MATCHES %@", regex)
+        if trimmedName.isEmpty { return "Name cannot be empty" }
+        if !test.evaluate(with: trimmedName) {
+            return "Name can contain letters and spaces only"
+        }
+        return nil
+    }
+
+    var descriptionError: String? {
+        if trimmedDescription.isEmpty { return "Description cannot be empty" }
+        return nil
+    }
+
+    var priceError: String? {
+        guard let value = Double(trimmedPrice), value > 0 else {
+            return "Enter a valid price"
+        }
+        return nil
+    }
+
+    var rewardError: String? {
+        guard let value = Int(trimmedReward), value >= 0 else {
+            return "Enter valid reward points"
+        }
+        return nil
+    }
+
+    var categoryError: String? {
+        selectedCategoryId == nil ? "Please select a category" : nil
+    }
+
+    var isFormValid: Bool {
+        nameError == nil && descriptionError == nil && priceError == nil
+            && rewardError == nil && categoryError == nil
+    }
+
+    func createProduct() async {
+        guard isFormValid else {
+            alertMessage = "Please fix the errors in the form."
+            showAlert = true
+            return
+        }
+
+        guard let priceValue = Double(trimmedPrice),
+            let rewardValue = Int(trimmedReward),
+            let catId = selectedCategoryId
+        else { return }
+
+        let newProduct = CreateProductRequest(
+            name: trimmedName,
+            prodDescription: trimmedDescription,
+            price: priceValue,
+            rewardPts: rewardValue,
+            categoryId: catId
+        )
+
+        isSubmitting = true
+        defer { isSubmitting = false }
+
+        let success = await addProduct(newProduct)
+        alertMessage =
+            success
+            ? "Product created successfully!"
+            : errorMessage ?? "Something went wrong."
+        showAlert = true
+    }
+
+    func addProduct(_ newProduct: CreateProductRequest) async -> Bool {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let createdProduct = try await repository.addProduct(newProduct)
+            products.append(createdProduct)
+            return true
+        } catch {
+            errorMessage =
+                "Failed to add product: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    func editProduct(id: Int, _ updatedProduct: UpdateProductRequest) async
+        -> Bool
+    {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let updated = try await repository.updateProduct(
+                id: id,
+                updatedProduct: updatedProduct
+            )
+            if let index = products.firstIndex(where: { $0.id == updated.id }) {
+                products[index] = updated
+            } else {
+                products.append(updated)
+            }
+            return true
+        } catch {
+            errorMessage =
+                "Failed to update product: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    func deleteProduct(id: Int) async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            products.removeAll { $0.id == id }
+            let _ = try await repository.deactivateProduct(id: id)
+        } catch {
+            errorMessage =
+                "Failed to deactivate product: \(error.localizedDescription)"
+            await fetchProducts(page: currentPage)
+        }
     }
 
     func uploadImage(for productId: Int) async {
@@ -182,8 +283,7 @@ final class ProductsViewModel: ObservableObject {
             let (body, boundary) = builder.finalize()
 
             let endpoint = APIEndpoint(
-                path:
-                    "https://herschel-hyperneurotic-hilma.ngrok-free.dev/owner/uploadImage/\(productId)",
+                path: "https://example.com/owner/uploadImage/\(productId)",
                 method: .POST,
                 body: body,
                 requiresAuth: true,
@@ -194,35 +294,10 @@ final class ProductsViewModel: ObservableObject {
                 endpoint: endpoint,
                 responseType: UploadProductImageResponse.self
             )
-
             uploadMessage = response.message
-            print("Upload success:", response.message)
-
             await fetchProducts()
         } catch {
             uploadMessage = "Upload failed: \(error.localizedDescription)"
-            print("Upload failed:", error)
-        }
-    }
-
-    func deleteProduct(id: Int) async {
-        isLoading = true
-        defer { isLoading = false }
-
-        do {
-            products.removeAll { $0.id == id }
-
-            let _ = try await repository.deactivateProduct(id: id)
-
-            deleteSuccess = true
-            print("Product deactivated:", id)
-
-        } catch {
-            print("Delete error:", error)
-            errorMessage =
-                "Failed to deactivate product: \(error.localizedDescription)"
-
-            await fetchProducts(page: currentPage)
         }
     }
 }

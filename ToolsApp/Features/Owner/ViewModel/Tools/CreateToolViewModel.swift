@@ -5,6 +5,8 @@ final class CreateToolViewModel: ObservableObject {
     @Published var name: String = ""
     @Published var selectedCategoryId: Int? = nil
     @Published var type: String = ""
+    @Published var nameTouched = false
+
     var isExpensive: String = "NO"
 
     var isExpensiveBool: Bool {
@@ -112,5 +114,14 @@ final class CreateToolViewModel: ObservableObject {
         }
 
         isLoading = false
+    }
+}
+
+extension CreateToolViewModel {
+    var nameError: String? {
+        guard nameTouched else { return nil }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "Name is required"
+            : nil
     }
 }

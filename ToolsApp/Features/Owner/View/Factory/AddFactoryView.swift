@@ -4,52 +4,55 @@ struct AddFactoryView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FactoryViewModel
 
-    @State private var name = ""
-    @State private var city = ""
-    @State private var address = ""
-    @State private var selectedManagerId: Int? = nil
-    @State private var managerSearchText = ""
-
-    @State private var isSubmitting = false
-    @State private var showAlert = false
-    @State private var alertMessage = ""
-
-    @State private var nameTouched = false
-    @State private var cityTouched = false
-    @State private var addressTouched = false
-    @State private var managerTouched = false
-
     var body: some View {
         NavigationStack {
             Form {
 
                 Section("Factory Details") {
                     VStack(alignment: .leading) {
-                        TextField("Factory Name", text: $name)
+                        TextField("Factory Name", text: $viewModel.name)
                             .autocapitalization(.words)
-                            .onChange(of: name) { oldValue,newValue in nameTouched = true }
+                            .onChange(of: viewModel.name) {
+                                oldValue,
+                                newValue in
+                                viewModel.nameTouched = true
+                            }
 
-                        if nameTouched, let error = nameError {
+                        if viewModel.nameTouched,
+                            let error = viewModel.nameError
+                        {
                             Text(error).foregroundColor(.red).font(.caption)
                         }
                     }
 
                     VStack(alignment: .leading) {
-                        TextField("City", text: $city)
+                        TextField("City", text: $viewModel.city)
                             .autocapitalization(.words)
-                            .onChange(of: city) { oldValue,newValue in cityTouched = true }
+                            .onChange(of: viewModel.city) {
+                                oldValue,
+                                newValue in
+                                viewModel.cityTouched = true
+                            }
 
-                        if cityTouched, let error = cityError {
+                        if viewModel.cityTouched,
+                            let error = viewModel.cityError
+                        {
                             Text(error).foregroundColor(.red).font(.caption)
                         }
                     }
 
                     VStack(alignment: .leading) {
-                        TextField("Address", text: $address)
+                        TextField("Address", text: $viewModel.address)
                             .autocapitalization(.sentences)
-                            .onChange(of: address) { oldValue,newValue in addressTouched = true }
+                            .onChange(of: viewModel.address) {
+                                oldValue,
+                                newValue in
+                                viewModel.addressTouched = true
+                            }
 
-                        if addressTouched, let error = addressError {
+                        if viewModel.addressTouched,
+                            let error = viewModel.addressError
+                        {
                             Text(error).foregroundColor(.red).font(.caption)
                         }
                     }
@@ -59,30 +62,38 @@ struct AddFactoryView: View {
                     if viewModel.isLoadingManagers {
                         HStack {
                             ProgressView()
-                            Text("Loading managers...")
-                                .foregroundColor(.secondary)
+                            Text("Loading managers...").foregroundColor(
+                                .secondary
+                            )
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     } else if let error = viewModel.managersErrorMessage {
                         VStack(alignment: .leading, spacing: 8) {
-                            Label(error, systemImage: "exclamationmark.triangle")
-                                .foregroundColor(.red)
-                                .font(.caption)
+                            Label(
+                                error,
+                                systemImage: "exclamationmark.triangle"
+                            )
+                            .foregroundColor(.red).font(.caption)
 
                             Button("Retry") {
-                                Task { await viewModel.fetchAvailableManagers() }
+                                Task {
+                                    await viewModel.fetchAvailableManagers()
+                                }
                             }
-                            .font(.caption)
-                            .buttonStyle(.bordered)
+                            .font(.caption).buttonStyle(.bordered)
                         }
                     } else {
-                        TextField("Search manager...", text: $managerSearchText)
-                            .textFieldStyle(.roundedBorder)
-                            .disableAutocorrection(true)
-                            .onChange(of: managerSearchText) { oldValue,newValue in
-                                managerTouched = true
-                                Task { await viewModel.searchManagers(query: managerSearchText) }
-                            }
+                        TextField(
+                            "Search manager...",
+                            text: $viewModel.managerSearchText
+                        )
+                        .textFieldStyle(.roundedBorder)
+                        .disableAutocorrection(true)
+                        .onChange(of: viewModel.managerSearchText) {
+                            oldValue,
+                            newValue in
+                            viewModel.managerTouched = true
+                        }
 
                         if viewModel.availableManagers.isEmpty {
                             Text("No managers found")
@@ -91,12 +102,18 @@ struct AddFactoryView: View {
                         } else {
                             ManagerSelectionList(
                                 managers: viewModel.availableManagers,
-                                selectedId: $selectedManagerId
+                                selectedId: $viewModel.selectedManagerId
                             )
-                            .onChange(of: selectedManagerId) { oldValue,newValue in managerTouched = true }
+                            .onChange(of: viewModel.selectedManagerId) {
+                                oldValue,
+                                newValue in
+                                viewModel.managerTouched = true
+                            }
                         }
 
-                        if managerTouched, let error = managerError {
+                        if viewModel.managerTouched,
+                            let error = viewModel.managerError
+                        {
                             Text(error).foregroundColor(.red).font(.caption)
                         }
                     }
@@ -104,104 +121,48 @@ struct AddFactoryView: View {
 
                 Section {
                     Button {
-                        Task { await createFactory() }
+                        Task { await viewModel.createFactory() }
                     } label: {
                         HStack {
-                            if isSubmitting {
+                            if viewModel.isSubmitting {
                                 ProgressView().progressViewStyle(.circular)
                             } else {
                                 Image(systemName: "checkmark.circle.fill")
                             }
-                            Text(isSubmitting ? "Creating..." : "Create Factory")
-                                .fontWeight(.medium)
+                            Text(
+                                viewModel.isSubmitting
+                                    ? "Creating..." : "Create Factory"
+                            )
+                            .fontWeight(.medium)
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .disabled(isSubmitting || !isFormValid)
-                    .listRowBackground(isFormValid ? Color.accentColor : Color.gray.opacity(0.3))
+                    .disabled(!viewModel.isFormValid || viewModel.isSubmitting)
+                    .listRowBackground(
+                        viewModel.isFormValid
+                            ? Color.accentColor : Color.gray.opacity(0.3)
+                    )
                     .foregroundColor(.white)
-                    .animation(.easeInOut, value: isFormValid)
+                    .animation(.easeInOut, value: viewModel.isFormValid)
                 }
             }
             .navigationTitle("Add Factory")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(.blue)
+                    Button("Cancel") { dismiss() }.foregroundColor(.blue)
                 }
             }
-            .alert("Result", isPresented: $showAlert) {
+            .alert("Result", isPresented: $viewModel.showAlert) {
                 Button("OK") { dismiss() }
             } message: {
-                Text(alertMessage)
+                Text(viewModel.alertMessage)
             }
             .task { await viewModel.fetchAvailableManagers() }
         }
-    }
-
-    private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var trimmedCity: String { city.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var trimmedAddress: String { address.trimmingCharacters(in: .whitespacesAndNewlines) }
-
-    private var nameError: String? {
-        let regex = "^[A-Za-z ]+$"
-        let test = NSPredicate(format: "SELF MATCHES %@", regex)
-        if trimmedName.isEmpty { return "Name cannot be empty" }
-        if !test.evaluate(with: trimmedName) { return "Name can contain letters and spaces only" }
-        return nil
-    }
-
-    private var cityError: String? {
-        let regex = "^[A-Za-z ]+$"
-        let test = NSPredicate(format: "SELF MATCHES %@", regex)
-        if trimmedCity.isEmpty { return "City cannot be empty" }
-        if !test.evaluate(with: trimmedCity) { return "City can contain letters and spaces only" }
-        return nil
-    }
-
-    private var addressError: String? {
-        let regex = "^[A-Za-z0-9 ,.-]+$"
-        let test = NSPredicate(format: "SELF MATCHES %@", regex)
-        if trimmedAddress.isEmpty { return "Address cannot be empty" }
-        if !test.evaluate(with: trimmedAddress) {
-            return "Address can contain letters, numbers, commas, periods, and hyphens"
-        }
-        return nil
-    }
-
-    private var managerError: String? {
-        selectedManagerId == nil ? "Please select a manager" : nil
-    }
-
-    private var isFormValid: Bool {
-        nameError == nil && cityError == nil && addressError == nil && managerError == nil
-    }
-
-    private func createFactory() async {
-        isSubmitting = true
-        defer { isSubmitting = false }
-
-        guard let managerId = selectedManagerId else {
-            alertMessage = "Please select a manager"
-            showAlert = true
-            return
-        }
-
-        let request = CreateFactoryRequest(
-            name: trimmedName,
-            city: trimmedCity,
-            address: trimmedAddress,
-            plantHeadId: managerId
-        )
-
-        let success = await viewModel.createFactory(request)
-        alertMessage = success ? "Factory created successfully!" : "Failed to create factory. Please try again."
-        showAlert = true
     }
 }
 
 #Preview {
     AddFactoryView(viewModel: FactoryViewModel())
 }
-

@@ -30,7 +30,6 @@ struct CategoryFilterRow: View {
     }
 }
 
-
 struct StatusFilterRow: View {
     @ObservedObject var vm: ProductsViewModel
 
@@ -63,4 +62,3 @@ struct StatusFilterRow: View {
         }
     }
 }
-

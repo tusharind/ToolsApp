@@ -103,7 +103,7 @@ struct FactoryDetailView: View {
                             .padding(8)
                             .background(Color(.systemGray6))
                             .cornerRadius(8)
-                            .onChange(of: managerSearchText) { _,query in
+                            .onChange(of: managerSearchText) { _, query in
                                 Task {
                                     await viewModel.searchManagers(query: query)
                                 }

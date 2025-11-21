@@ -118,4 +118,21 @@ struct ProductsListView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 200)
     }
+
+    var nameError: String? {
+        guard viewModel.nameTouched else { return nil }
+        let trimmed = viewModel.name.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+        if trimmed.isEmpty { return "Name cannot be empty" }
+
+        let regex = "^[A-Za-z ]+$"
+        if !NSPredicate(format: "SELF MATCHES %@", regex).evaluate(
+            with: trimmed
+        ) {
+            return "Name can contain letters and spaces only"
+        }
+        return nil
+    }
+
 }

@@ -207,7 +207,7 @@ extension EditProductView {
             updatedProduct.rewardPts = rewardValue
             updatedProduct.categoryId = selectedCategoryId
             updatedProduct.status = selectedStatus
-            updatedProduct.image = product.image  // keep URL
+            updatedProduct.image = product.image
             onSave(updatedProduct)
             dismiss()
         } else {

@@ -4,8 +4,6 @@ struct CreateToolView: View {
     @StateObject private var viewModel = CreateToolViewModel()
     @State private var showImagePicker = false
 
-    @State private var nameTouched = false
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -20,10 +18,10 @@ struct CreateToolView: View {
                             .cornerRadius(8)
                             .autocapitalization(.words)
                             .onChange(of: viewModel.name) { _, _ in
-                                nameTouched = true
+                                viewModel.nameTouched = true
                             }
 
-                        if let error = nameError {
+                        if let error = viewModel.nameError {
                             Text(error)
                                 .foregroundColor(.red)
                                 .font(.caption)
@@ -127,23 +125,8 @@ struct CreateToolView: View {
         }
     }
 
-    private var nameError: String? {
-        guard nameTouched else { return nil }
-        let trimmed = viewModel.name.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        if trimmed.isEmpty { return "Name cannot be empty" }
-
-        let regex = "^[A-Za-z ]+$"
-        if !NSPredicate(format: "SELF MATCHES %@", regex).evaluate(
-            with: trimmed
-        ) {
-            return "Name can contain letters and spaces only"
-        }
-        return nil
-    }
 
     private var isFormValid: Bool {
-        nameError == nil
+        viewModel.nameError == nil
     }
 }

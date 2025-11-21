@@ -4,24 +4,14 @@ struct ManagersView: View {
     @StateObject private var viewModel = ManagersViewModel()
 
     @State private var showingAddManager = false
-    @State private var username = ""
-    @State private var email = ""
-    @State private var phone = ""
-    @State private var searchTask: Task<Void, Never>? = nil
-
-    @State private var showDeleteConfirm = false
     @State private var managerToDelete: Manager? = nil
-
-    @State private var usernameTouched = false
-    @State private var emailTouched = false
-    @State private var phoneTouched = false
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 VStack(spacing: 12) {
                     searchField
-
                     contentView
                         .task { await viewModel.fetchManagers() }
                 }
@@ -35,11 +25,10 @@ struct ManagersView: View {
                 isPresented: $showDeleteConfirm,
                 actions: {
                     Button("Cancel", role: .cancel) {}
-
                     Button("Delete", role: .destructive) {
                         Task {
                             if let manager = managerToDelete {
-                                await viewModel.deleteManager(id: manager.id)
+                                await viewModel.deleteManager(manager)
                                 await viewModel.fetchManagers()
                             }
                             managerToDelete = nil
@@ -62,15 +51,6 @@ struct ManagersView: View {
             .background(Color(.secondarySystemBackground))
             .cornerRadius(10)
             .padding(.horizontal)
-            .onChange(of: viewModel.searchText) { _, _ in
-                searchTask?.cancel()
-                searchTask = Task {
-                    try? await Task.sleep(nanoseconds: 900_000_000)
-                    if !Task.isCancelled {
-                        await viewModel.fetchManagers()
-                    }
-                }
-            }
     }
 
     @ViewBuilder
@@ -108,16 +88,16 @@ struct ManagersView: View {
                 .foregroundColor(.red)
                 .multilineTextAlignment(.center)
                 .padding()
-            Button("Retry") { Task { await viewModel.fetchManagers() } }
-                .buttonStyle(.borderedProminent)
+            Button("Retry") {
+                Task { await viewModel.fetchManagers() }
+            }
+            .buttonStyle(.borderedProminent)
             Spacer()
         }
     }
 
     private var addButton: some View {
-        Button {
-            showingAddManager = true
-        } label: {
+        Button(action: { showingAddManager = true }) {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.white)
@@ -135,64 +115,45 @@ struct ManagersView: View {
                 Section("New Manager Details") {
                     ValidatedTextField(
                         title: "Username",
-                        text: $username,
-                        touched: $usernameTouched,
-                        errorMessage: "Username cannot be empty"
+                        text: $viewModel.newUsername,
+                        touched: .constant(true),
+                        errorMessage: viewModel.usernameError
+                            ?? "Username cannot be empty"
                     )
                     ValidatedTextField(
                         title: "Email",
-                        text: $email,
-                        touched: $emailTouched,
+                        text: $viewModel.newEmail,
+                        touched: .constant(true),
                         keyboard: .emailAddress,
-                        errorMessage: "Enter a valid email",
-                        validator: { text in
-                            let emailRegex =
-                                "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
-                            return NSPredicate(
-                                format: "SELF MATCHES %@",
-                                emailRegex
-                            ).evaluate(with: text)
-                        }
+                        errorMessage: viewModel.emailError
+                            ?? "Enter a valid email"
                     )
                     ValidatedTextField(
                         title: "Phone",
-                        text: $phone,
-                        touched: $phoneTouched,
+                        text: $viewModel.newPhone,
+                        touched: .constant(true),
                         keyboard: .phonePad,
-                        errorMessage: "Enter a valid phone number",
-                        validator: { text in
-                            let phoneRegex = "^[0-9]{7,15}$"
-                            return NSPredicate(
-                                format: "SELF MATCHES %@",
-                                phoneRegex
-                            ).evaluate(with: text)
-                        }
+                        errorMessage: viewModel.phoneError
+                            ?? "Enter a valid phone number"
                     )
                 }
 
                 Section {
                     Button {
-                        Task {
-                            await viewModel.createManager(
-                                username: username,
-                                email: email,
-                                phone: phone
-                            )
-                            if viewModel.errorMessage == nil {
-                                resetForm()
-                                showingAddManager = false
-                                await viewModel.fetchManagers()
-                            }
+                        Task { await viewModel.createManager() }
+                        if viewModel.errorMessage == nil {
+                            showingAddManager = false
+                            Task { await viewModel.fetchManagers() }
                         }
                     } label: {
                         if viewModel.isLoading {
-                            ProgressView()
+                            ProgressView().frame(maxWidth: .infinity)
                         } else {
                             Text("Create Manager").frame(maxWidth: .infinity)
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!isFormValid || viewModel.isLoading)
+                    .disabled(!viewModel.isFormValid || viewModel.isLoading)
                 }
             }
             .navigationTitle("Add Manager")
@@ -202,189 +163,5 @@ struct ManagersView: View {
                 }
             }
         }
-    }
-
-    private func resetForm() {
-        username = ""
-        email = ""
-        phone = ""
-        usernameTouched = false
-        emailTouched = false
-        phoneTouched = false
-    }
-
-    private var isFormValid: Bool {
-        !username.isEmpty && !email.isEmpty && !phone.isEmpty
-            && usernameError == nil && emailError == nil && phoneError == nil
-    }
-
-    private var usernameError: String? {
-        usernameTouched && username.trimmingCharacters(in: .whitespaces).isEmpty
-            ? "Username cannot be empty" : nil
-    }
-
-    private var emailError: String? {
-        guard emailTouched else { return nil }
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
-        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(
-            with: email
-        ) ? nil : "Enter a valid email"
-    }
-
-    private var phoneError: String? {
-        guard phoneTouched else { return nil }
-        let phoneRegex = "^[0-9]{7,15}$"
-        return NSPredicate(format: "SELF MATCHES %@", phoneRegex).evaluate(
-            with: phone
-        ) ? nil : "Enter a valid phone number"
-    }
-}
-
-struct ValidatedTextField: View {
-    let title: String
-    @Binding var text: String
-    @Binding var touched: Bool
-    var keyboard: UIKeyboardType = .default
-    var errorMessage: String
-    var validator: ((String) -> Bool)? = nil
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            TextField(title, text: $text)
-                .keyboardType(keyboard)
-                .textInputAutocapitalization(.never)
-                .onChange(of: text) { _, _ in touched = true }
-
-            if touched && !isValid {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .font(.caption)
-            }
-        }
-    }
-
-    private var isValid: Bool {
-        validator?(text) ?? !text.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-}
-
-struct ManagerCardView: View {
-    let manager: Manager
-    var onDelete: (() -> Void)? = nil
-
-    var body: some View {
-        ZStack(alignment: .topTrailing) {
-            HStack(alignment: .top, spacing: 12) {
-                profileImage
-                managerInfo
-                Spacer()
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .frame(height: 130)
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
-            .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
-            .padding(.horizontal)
-
-            if let onDelete {
-                Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.red)
-                        .padding(6)
-                }
-                .background(Color.white)
-                .clipShape(Circle())
-                .shadow(radius: 2)
-                .padding(8)
-            }
-        }
-    }
-
-    private var profileImage: some View {
-        Group {
-            if let urlString = manager.profileImage ?? manager.img,
-                let url = URL(string: urlString)
-            {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(width: 60, height: 60)
-                    case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 60, height: 60)
-                            .clipShape(Circle())
-                    case .failure:
-                        defaultImage
-                    @unknown default:
-                        defaultImage
-                    }
-                }
-            } else {
-                defaultImage
-            }
-        }
-    }
-
-    private var defaultImage: some View {
-        Image(systemName: "person.crop.circle.fill")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 60, height: 60)
-            .foregroundColor(.gray)
-    }
-
-    private var managerInfo: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(manager.username)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-
-                Spacer()
-
-                Text(manager.status.capitalized)
-                    .font(.caption)
-                    .padding(4)
-                    .background(statusColor.opacity(0.2))
-                    .foregroundColor(statusColor)
-                    .cornerRadius(6)
-            }
-
-            Text(manager.email)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-                .lineLimit(1)
-                .truncationMode(.tail)
-
-            if let factoryName = manager.factoryName {
-                Text("Factory: \(factoryName)")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(factoryBadgeBackground)
-            }
-        }
-    }
-
-    private var statusColor: Color {
-        switch manager.status.lowercased() {
-        case "active": return .green
-        case "inactive": return .red
-        case "pending": return .orange
-        default: return .blue
-        }
-    }
-
-    private var factoryBadgeBackground: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(Color.orange)
-            .shadow(color: Color.orange.opacity(0.4), radius: 4, x: 0, y: 2)
     }
 }
